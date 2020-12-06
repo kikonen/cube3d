@@ -6,24 +6,65 @@
   import Input from './Input.js';
   import Engine from './Engine.js';
 
+  export let name;
+
   let canvasEl;
+
+  let started = false;
+  let debug = false;
+  let rotate = false;
 
   let input;
   let engine;
 
   function start() {
-    let model = '../model/cube.obj';
-
+    started = true;
     input = new Input();
-    engine = new Engine({input, canvasEl});
 
+    engine = new Engine({input, canvasEl});
+    engine.rotate = rotate;
+    engine.debug = debug;
+
+    console.log(engine);
+
+    let model = '../model/cube.obj';
     engine
       .openModel(model)
       .then(() => { engine.start(); });
   }
 
+  function stop() {
+    console.log(engine);
+    engine.stop();
+    started = false;
+  }
+
+  function toggleGame() {
+    if (started) {
+      stop();
+    } else {
+      start();
+    }
+  }
+
+  function toggleDebug() {
+    debug = !debug;
+    if (engine) {
+      engine.debug = debug;
+    }
+    if (debug) {
+      console.clear();
+    }
+  }
+
+  function toggleRotate() {
+    rotate = !rotate;
+    if (engine) {
+      engine.rotate = rotate;
+    }
+  }
+
   onMount(function () {
-    start();
   });
 
   function handleKeydown(ev) {
@@ -45,6 +86,11 @@
 
 <main>
   <h1>3D</h1>
+  <div>
+    <button on:click={toggleGame}>{started ? 'Stop' : 'Start'}</button>
+    <button on:click={toggleDebug}>{debug ? 'Debug off' : 'Debug on'}</button>
+    <button on:click={toggleRotate}>{rotate ? 'Rotate off' : 'Rotate on'}</button>
+  </div>
 
   <container class="container">
     <canvas bind:this={canvasEl} class="canvas" width=400 height=400></canvas>

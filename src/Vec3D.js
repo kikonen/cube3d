@@ -29,7 +29,7 @@ export default class Vec3D {
     return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
   }
 
-  normalize() {
+  normal() {
     let magnitude = this.magnitude();
     return new Vec3D(this.x /= magnitude, this.y /= magnitude, this.z /= magnitude, this.w);
   }
@@ -93,6 +93,14 @@ export default class Vec3D {
 
   minus(b) {
     return new Vec3D(this.x - b.x, this.y - b.y, this.z - b.z, this.w);
+  }
+
+  add(scalar) {
+    return new Vec3D(this.x + scalar, this.y + scalar, this.z + scalar, this.w);
+  }
+
+  addZ(scalar) {
+    return new Vec3D(this.x, this.y, this.z + scalar, this.w);
   }
 
   multiply(scalar) {

@@ -28,7 +28,7 @@ export default class Vec2D {
     return Math.sqrt(this.x * this.x + this.y * this.y);
   }
 
-  normalize() {
+  normal() {
     let magnitude = this.magnitude();
     return new Vec2D(this.x /= magnitude, this.y /= magnitude, this.w);
   }
@@ -79,6 +79,10 @@ export default class Vec2D {
 
   minus(b) {
     return new Vec2D(this.x - b.x, this.y - b.y, this.w);
+  }
+
+  add(scalar) {
+    return new Vec2D(this.x + scalar, this.y + scalar, this.w);
   }
 
   multiply(scalar) {

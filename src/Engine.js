@@ -20,6 +20,8 @@ export default class Engine {
 
     this.mesh = new Mesh();
 
+    this.rotate = false;
+    this.debug = false;
     this.ticks = 0;
   }
 
@@ -32,6 +34,10 @@ export default class Engine {
       return;
     }
     this.started = true;
+
+    this.theta = 0;
+    this.thetaZ = 0;
+    this.thetaX = 0;
 
     this.currentTime = Date.now();
     setTimeout(this.tick, TICK_SPEED);
@@ -56,6 +62,11 @@ export default class Engine {
     timeScale = 0.2;
 //    console.log(timeScale, elapsed);
 
+    if (this.rotate) {
+      this.thetaZ += timeScale * 0.01;
+      this.thetaX += timeScale * 0.04;
+    }
+
     this.currentTime = now;
     setTimeout(this.tick, TICK_SPEED);
   }
@@ -65,36 +76,61 @@ export default class Engine {
       return;
     }
 
+    let id = Matrix4x4.identifyMatrix();
+    let v2 = id.multiplyVec(new Vec3D(1, 2, 3, 4));
+
     let canvas = this.canvasEl;
 //    canvas.width = canvas.parentElement.clientWidth;
 //    canvas.height = canvas.parentElement.clientHeight;
 
+    let screenW = canvas.width;
+    let screenH = canvas.height;
+
+    let aspectRatio = screenH / screenW;
+    let near = 0.1;
+    let far = 1000;
+    let fov = 90;
+
+    let projection = Matrix4x4.projectionMatrix(aspectRatio, fov, near, far);
+    let rotateZ = Matrix4x4.rotationZ(this.thetaZ);
+    let rotateX = Matrix4x4.rotationX(this.thetaX);
+
     let ctx = canvas.getContext("2d");
-    let scale = 50;
-    let offset = 200;
 
-    let id = Matrix4x4.identifyMatrix();
-    let v2 = id.multiplyVec(new Vec3D(1, 2, 3, 4));
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, screenW, screenH);
 
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, screenW, screenH);
 
     this.mesh.triangles.forEach((triangle) => {
       ctx.beginPath();
 
       let first = true;
       triangle.points.forEach((p) => {
+        let rotatedZ = rotateZ.multiplyVec(p);
+        let rotatedX = rotateX.multiplyVec(rotatedZ);
+
+        let translated = rotatedX.addZ(3);
+
+        let projected = projection.multiplyVec(translated);
+        if (projected.w != 0) {
+          projected.x /= projected.w;
+          projected.y /= projected.w;
+          projected.z /= projected.w;
+        }
+
+        projected = projected.add(1);
+
+        projected.x *= 0.5 * screenW;
+        projected.y *= 0.5 * screenH;
+
         if (first) {
-          ctx.moveTo(offset + p.x * scale, offset + p.y * scale);
+          ctx.moveTo(projected.x, projected.y);
         } else {
-          ctx.lineTo(offset + p.x * scale, offset + p.y * scale);
+          ctx.lineTo(projected.x, projected.y);
         }
         first = false;
       });
-
-//      ctx.lineTo(offset + triangle.points[0].x * scale, offset + triangle.points[0].y * scale);
 
       ctx.closePath();
 
