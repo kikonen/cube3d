@@ -88,8 +88,8 @@
   <h1>3D</h1>
   <div>
     <button on:click={toggleGame}>{started ? 'Stop' : 'Start'}</button>
-    <button on:click={toggleDebug}>{debug ? 'Debug off' : 'Debug on'}</button>
-    <button on:click={toggleRotate}>{rotate ? 'Rotate off' : 'Rotate on'}</button>
+    <button on:click={toggleDebug}>{debug ? 'Debug: On' : 'Debug: Off'}</button>
+    <button on:click={toggleRotate}>{rotate ? 'Rotate: On' : 'Rotate: Off'}</button>
   </div>
 
   <container class="container">

@@ -36,8 +36,8 @@ export default class Engine {
     this.started = true;
 
     this.theta = 0;
-    this.thetaZ = 0;
-    this.thetaX = 0;
+    this.thetaZ = 30;
+    this.thetaX = 40;
 
     this.currentTime = Date.now();
     setTimeout(this.tick, TICK_SPEED);
@@ -63,8 +63,8 @@ export default class Engine {
 //    console.log(timeScale, elapsed);
 
     if (this.rotate) {
-      this.thetaZ += timeScale * 0.01;
-      this.thetaX += timeScale * 0.04;
+      this.thetaZ += timeScale * 1;
+      this.thetaX += timeScale * 4;
     }
 
     this.currentTime = now;
@@ -102,6 +102,7 @@ export default class Engine {
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, screenW, screenH);
 
+    let idx = 0;
     this.mesh.triangles.forEach((triangle) => {
       ctx.beginPath();
 
@@ -138,8 +139,9 @@ export default class Engine {
       ctx.strokeColor = '#ffffff';
       ctx.stroke();
 
-      ctx.fillStyle = '#ffff00';
-      ctx.fill();
+//      ctx.fillStyle = '#ffff00';
+//      ctx.fill();
+      idx += 1;
     });
 
     requestAnimationFrame(this.render);

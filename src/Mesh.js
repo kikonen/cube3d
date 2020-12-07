@@ -20,7 +20,7 @@ export default class Mesh {
             let vec = new Vec3D(
               parseFloat(parts[1]),
               parseFloat(parts[2]),
-              parseFloat(parts[2]));
+              parseFloat(parts[3]));
             vectors.push(vec);
             break;
           }
@@ -29,7 +29,7 @@ export default class Mesh {
               [
                 vectors[parseInt(parts[1], 10) - 1],
                 vectors[parseInt(parts[2], 10) - 1],
-                vectors[parseInt(parts[2], 10) - 1]
+                vectors[parseInt(parts[3], 10) - 1]
               ]);
             triangles.push(triangle);
             break;
@@ -37,7 +37,9 @@ export default class Mesh {
         }
       });
 
-      console.log(triangles);
+//      console.log(vectors);
+//      console.log(triangles);
+
       this.triangles = triangles;
     });
   }

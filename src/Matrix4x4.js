@@ -45,7 +45,9 @@ export default class Matrix4x4 {
     );
   }
 
-  static rotationZ(theta) {
+  static rotationZ(thetaAngle) {
+    let theta = thetaAngle / 180 * Math.PI;
+
     return new Matrix4x4(
       [
         [Math.cos(theta), Math.sin(theta), 0, 0],
@@ -56,7 +58,9 @@ export default class Matrix4x4 {
     );
   }
 
-  static rotationX(theta) {
+  static rotationX(thetaAngle) {
+    let theta = thetaAngle / 180 * Math.PI;
+
     return new Matrix4x4(
       [
         [1, 0, 0, 0],
