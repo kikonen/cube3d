@@ -80,6 +80,10 @@ export default class Engine {
 
     let canvas = this.canvasEl;
 
+    if (!this.ctx2D) {
+      this.ctx2D = canvas.getContext("2d", { alpha: false });
+    }
+
     let screenW = canvas.width;
     let screenH = canvas.height;
 
@@ -92,12 +96,16 @@ export default class Engine {
     let rotateZ = Matrix4x4.rotationZ(this.thetaZ);
     let rotateX = Matrix4x4.rotationX(this.thetaX);
 
-    let ctx = canvas.getContext("2d");
+//    let ctx = screen.getContext("2d");
+    let ctx = this.ctx2D;
 
 //    ctx.clearRect(0, 0, screenW, screenH);
 
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, screenW, screenH);
+
+    ctx.lineWidth = 1;
+    ctx.strokeColor = '#ffffff';
 
     let idx = 0;
     for (let triangle of this.mesh.triangles) {
@@ -131,8 +139,6 @@ export default class Engine {
 
       ctx.closePath();
 
-      ctx.lineWidth = 2;
-      ctx.strokeColor = '#ffffff';
       ctx.stroke();
 
 //      ctx.fillStyle = '#ffff00';
@@ -142,7 +148,7 @@ export default class Engine {
 
     let endTs = new Date().getTime();
 
-//    console.log(endTs - startTs);
+    console.log(endTs - startTs);
 
     requestAnimationFrame(this.render);
   }

@@ -25,7 +25,9 @@
     engine.rotate = rotate;
     engine.debug = debug;
 
-    console.log(engine);
+    if (debug) {
+      console.log(engine);
+    }
 
     let model = '../model/airboat.obj';
     engine
@@ -34,7 +36,9 @@
   }
 
   function stop() {
-    console.log(engine);
+    if (debug) {
+      console.log(engine);
+    }
     engine.stop();
     started = false;
   }
