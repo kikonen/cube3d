@@ -86,6 +86,7 @@ export default class Engine {
     }
 
     let camera = new Vec3D(0, 0, 0);
+    let light = new Vec3D(0, 0, -1).normalize();
 
     let screenW = canvas.width;
     let screenH = canvas.height;
@@ -118,7 +119,7 @@ export default class Engine {
       for (let p of triangle.points) {
         let p1 = rotateZ.multiplyVec(p);
         p1 = rotateX.multiplyVec(p1);
-        p1.z += 3;
+        p1.z += 5;
 
         points.push(p1);
       }
@@ -132,6 +133,8 @@ export default class Engine {
         skipped += 1;
         continue;
       }
+
+      let lightAmount = normal.dot(light);
 
       let projectedPoints = [];
 
@@ -151,13 +154,13 @@ export default class Engine {
         projectedPoints.push(projected);
       }
 
-      drawList.push([triangle, projectedPoints]);
+      drawList.push([triangle, lightAmount, projectedPoints]);
     }
 
 
     drawList.sort((a, b) => {
-      let ma = a[1][0].z;
-      let mb = b[1][0].z;
+      let ma = a[2][0].z;
+      let mb = b[2][0].z;
 
       return ma > mb ? -1 : (mb == ma ? 0 : 1);
     });
@@ -165,7 +168,8 @@ export default class Engine {
 
     for (let pair of drawList) {
       let triangle = pair[0];
-      let points = pair[1];
+      let lightAmount = pair[1];
+      let points = pair[2];
 
       ctx.beginPath();
 
@@ -180,10 +184,14 @@ export default class Engine {
       }
       ctx.closePath();
 
-      ctx.fillStyle = '#dede10';
+      ctx.fillStyle = `rgb(
+        ${Math.floor(100 + 155 * lightAmount)},
+        ${Math.floor(100 + 155 * lightAmount)},
+        0)`;
+
       ctx.fill();
 
-      ctx.stroke();
+//      ctx.stroke();
     }
 
     let diff = new Date().getTime() - startTs;
