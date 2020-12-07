@@ -31,6 +31,7 @@ export default class Matrix4x4 {
     );
   }
 
+  // https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix
   static projectionMatrix(aspectRatio, fov, near, far) {
     let f = 1 / Math.tan((fov / 2) / 180 * Math.PI);
     let q = far / (far - near);
@@ -45,6 +46,7 @@ export default class Matrix4x4 {
     );
   }
 
+  // https://en.wikipedia.org/wiki/Rotation_matrix
   static rotationZ(thetaAngle) {
     let theta = thetaAngle / 180 * Math.PI;
 
@@ -58,14 +60,15 @@ export default class Matrix4x4 {
     );
   }
 
+  // https://en.wikipedia.org/wiki/Rotation_matrix
   static rotationX(thetaAngle) {
     let theta = thetaAngle / 180 * Math.PI;
 
     return new Matrix4x4(
       [
         [1, 0, 0, 0],
-        [0, Math.cos(theta/2), Math.sin(theta/2), 0],
-        [0, -Math.sin(theta), Math.cos(theta/2), 0],
+        [0, Math.cos(theta), Math.sin(theta), 0],
+        [0, -Math.sin(theta), Math.cos(theta), 0],
         [0, 0, 0, 1],
       ]
     );
