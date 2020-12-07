@@ -36,8 +36,8 @@ export default class Engine {
     this.started = true;
 
     this.theta = 0;
-    this.thetaZ = 30;
-    this.thetaX = 40;
+    this.thetaZ = 0;
+    this.thetaX = 0;
 
     this.currentTime = Date.now();
     setTimeout(this.tick, TICK_SPEED);
@@ -76,12 +76,9 @@ export default class Engine {
       return;
     }
 
-    let id = Matrix4x4.identifyMatrix();
-    let v2 = id.multiplyVec(new Vec3D(1, 2, 3, 4));
+    let startTs = new Date().getTime();
 
     let canvas = this.canvasEl;
-//    canvas.width = canvas.parentElement.clientWidth;
-//    canvas.height = canvas.parentElement.clientHeight;
 
     let screenW = canvas.width;
     let screenH = canvas.height;
@@ -97,23 +94,22 @@ export default class Engine {
 
     let ctx = canvas.getContext("2d");
 
-    ctx.clearRect(0, 0, screenW, screenH);
+//    ctx.clearRect(0, 0, screenW, screenH);
 
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, screenW, screenH);
 
     let idx = 0;
-    this.mesh.triangles.forEach((triangle) => {
+    for (let triangle of this.mesh.triangles) {
       ctx.beginPath();
 
       let first = true;
-      triangle.points.forEach((p) => {
-        let rotatedZ = rotateZ.multiplyVec(p);
-        let rotatedX = rotateX.multiplyVec(rotatedZ);
+      for (let p of triangle.points) {
+        let p1 = rotateZ.multiplyVec(p);
+        p1 = rotateX.multiplyVec(p1);
+        p1.z += 10;
 
-        let translated = rotatedX.addZ(3);
-
-        let projected = projection.multiplyVec(translated);
+        let projected = projection.multiplyVec(p1);
         if (projected.w != 0) {
           projected.x /= projected.w;
           projected.y /= projected.w;
@@ -131,7 +127,7 @@ export default class Engine {
           ctx.lineTo(projected.x, projected.y);
         }
         first = false;
-      });
+      }
 
       ctx.closePath();
 
@@ -142,7 +138,11 @@ export default class Engine {
 //      ctx.fillStyle = '#ffff00';
 //      ctx.fill();
       idx += 1;
-    });
+    }
+
+    let endTs = new Date().getTime();
+
+//    console.log(endTs - startTs);
 
     requestAnimationFrame(this.render);
   }

@@ -1,22 +1,44 @@
 import Vec3D from './Vec3D.js';
 
+const C00 = 0 * 4 + 0;
+const C01 = 0 * 4 + 1;
+const C02 = 0 * 4 + 2;
+const C03 = 0 * 4 + 3;
+const C10 = 1 * 4 + 0;
+const C11 = 1 * 4 + 1;
+const C12 = 1 * 4 + 2;
+const C13 = 1 * 4 + 3;
+const C20 = 2 * 4 + 0;
+const C21 = 2 * 4 + 1;
+const C22 = 2 * 4 + 2;
+const C23 = 2 * 4 + 3;
+const C30 = 3 * 4 + 0;
+const C31 = 3 * 4 + 1;
+const C32 = 3 * 4 + 2;
+const C33 = 3 * 4 + 3;
+
 export default class Matrix4x4 {
   constructor(rows) {
-    this.rows = rows;
+    let data = [];
+    data.push(...rows[0]);
+    data.push(...rows[1]);
+    data.push(...rows[2]);
+    data.push(...rows[3]);
+    this.data = data;
   }
 
   toString() {
-    let r = this.rows;
-    return `[${r[0][0]}, ${r[0][1]}, ${r[0][2]}, ${r[0][3]}]\n[${r[1][0]}, ${r[1][1]}, ${r[1][2]}, ${r[1][3]}]\n[${r[2][0]}, ${r[2][1]}, ${r[2][2]}, ${r[2][3]}]\n[${r[3][0]}, ${r[3][1]}, ${r[3][2]}, ${r[3][3]}]`;
+    let d = this.data;
+    return `[${d[C00]}, ${d[C01]}, ${d[C02]}, ${d[C03]}]\n[${d[C10]}, ${d[C11]}, ${d[C12]}, ${d[C13]}]\n[${d[C20]}, ${d[C21]}, ${d[C22]}, ${d[C23]}]\n[${d[C30]}, ${d[C31]}, ${d[C32]}, ${d[C33]}]`;
   }
 
   multiplyVec(v) {
-    let r = this.rows;
+    let d = this.data;
     return new Vec3D(
-      v.x * r[0][0] + v.y * r[1][0] + v.z * r[2][0]+ v.w * r[2][0],
-      v.x * r[0][1] + v.y * r[1][1] + v.z * r[2][1]+ v.w * r[3][1],
-      v.x * r[0][2] + v.y * r[1][2] + v.z * r[2][2]+ v.w * r[3][2],
-      v.x * r[0][3] + v.y * r[1][3] + v.z * r[2][3]+ v.w * r[3][3],
+      v.x * d[C00] + v.y * d[C10] + v.z * d[C20]+ v.w * d[C20],
+      v.x * d[C01] + v.y * d[C11] + v.z * d[C21]+ v.w * d[C31],
+      v.x * d[C02] + v.y * d[C12] + v.z * d[C22]+ v.w * d[C32],
+      v.x * d[C03] + v.y * d[C13] + v.z * d[C23]+ v.w * d[C33],
     );
   }
 

@@ -27,7 +27,7 @@
 
     console.log(engine);
 
-    let model = '../model/cube.obj';
+    let model = '../model/airboat.obj';
     engine
       .openModel(model)
       .then(() => { engine.start(); });
