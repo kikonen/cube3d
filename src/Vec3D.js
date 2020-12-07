@@ -29,9 +29,17 @@ export default class Vec3D {
     return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
   }
 
+  normalize() {
+    let magnitude = this.magnitude();
+    this.x /= magnitude;
+    this.y /= magnitude;
+    this.z /= magnitude;
+    return this;
+  }
+
   normal() {
     let magnitude = this.magnitude();
-    return new Vec3D(this.x /= magnitude, this.y /= magnitude, this.z /= magnitude, this.w);
+    return new Vec3D(this.x / magnitude, this.y / magnitude, this.z / magnitude, this.w);
   }
 
   signX() {
@@ -140,6 +148,10 @@ export default class Vec3D {
   }
 
   cross(b) {
-    return;
+    return new Vec3D(
+      this.y * b.z - this.z * b.y,
+      this.z * b.x - this.x * b.z,
+      this.x * b.y - this.y * b.x,
+      this.w);
   }
 }

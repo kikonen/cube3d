@@ -63,7 +63,7 @@ export default class Engine {
 //    console.log(timeScale, elapsed);
 
     if (this.rotate) {
-      this.thetaZ += timeScale * 1;
+      this.thetaZ += timeScale * 8;
       this.thetaX += timeScale * 4;
     }
 
@@ -77,12 +77,15 @@ export default class Engine {
     }
 
     let startTs = new Date().getTime();
+    let skipped = 0;
 
     let canvas = this.canvasEl;
 
     if (!this.ctx2D) {
       this.ctx2D = canvas.getContext("2d", { alpha: false });
     }
+
+    let camera = new Vec3D(0, 0, 0);
 
     let screenW = canvas.width;
     let screenH = canvas.height;
@@ -107,17 +110,33 @@ export default class Engine {
     ctx.lineWidth = 1;
     ctx.strokeColor = '#ffffff';
 
-    let idx = 0;
-    for (let triangle of this.mesh.triangles) {
-      ctx.beginPath();
+    let drawList = [];
 
-      let first = true;
+    for (let triangle of this.mesh.triangles) {
+      let points = [];
+
       for (let p of triangle.points) {
         let p1 = rotateZ.multiplyVec(p);
         p1 = rotateX.multiplyVec(p1);
-        p1.z += 10;
+        p1.z += 3;
 
-        let projected = projection.multiplyVec(p1);
+        points.push(p1);
+      }
+
+      let line1 = points[1].minus(points[0]);
+      let line2 = points[2].minus(points[0]);
+      let normal = line1.cross(line2).normalize();
+
+      let dot = normal.dot(points[0].minus(camera));
+      if (dot >= 0) {
+        skipped += 1;
+        continue;
+      }
+
+      let projectedPoints = [];
+
+      for (let p of points) {
+        let projected = projection.multiplyVec(p);
         if (projected.w != 0) {
           projected.x /= projected.w;
           projected.y /= projected.w;
@@ -129,26 +148,47 @@ export default class Engine {
         projected.x *= 0.5 * screenW;
         projected.y *= 0.5 * screenH;
 
+        projectedPoints.push(projected);
+      }
+
+      drawList.push([triangle, projectedPoints]);
+    }
+
+
+    drawList.sort((a, b) => {
+      let ma = a[1][0].z;
+      let mb = b[1][0].z;
+
+      return ma > mb ? -1 : (mb == ma ? 0 : 1);
+    });
+
+
+    for (let pair of drawList) {
+      let triangle = pair[0];
+      let points = pair[1];
+
+      ctx.beginPath();
+
+      let first = true;
+      for (let p of points) {
         if (first) {
-          ctx.moveTo(projected.x, projected.y);
+          ctx.moveTo(p.x, p.y);
         } else {
-          ctx.lineTo(projected.x, projected.y);
+          ctx.lineTo(p.x, p.y);
         }
         first = false;
       }
-
       ctx.closePath();
 
-      ctx.stroke();
+      ctx.fillStyle = '#dede10';
+      ctx.fill();
 
-//      ctx.fillStyle = '#ffff00';
-//      ctx.fill();
-      idx += 1;
+      ctx.stroke();
     }
 
-    let endTs = new Date().getTime();
+    let diff = new Date().getTime() - startTs;
 
-    console.log(endTs - startTs);
+    console.log(`skip=${skipped}, ms=${diff}`);
 
     requestAnimationFrame(this.render);
   }

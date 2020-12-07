@@ -29,7 +29,7 @@
       console.log(engine);
     }
 
-    let model = '../model/airboat.obj';
+    let model = '../model/cube.obj';
     engine
       .openModel(model)
       .then(() => { engine.start(); });
