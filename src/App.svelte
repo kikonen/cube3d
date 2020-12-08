@@ -29,7 +29,7 @@
       console.log(engine);
     }
 
-    let model = '../model/cube.obj';
+    let model = '../cube3d/model/teapot.obj';
     engine
       .openModel(model)
       .then(() => { engine.start(); });
