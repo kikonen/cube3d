@@ -25,8 +25,11 @@ export default class Engine {
     this.ticks = 0;
   }
 
-  openModel(model) {
-    return this.mesh.loadObject(model);
+  openModel({resource, distance}) {
+    this.resource = resource;
+    this.distance = distance;
+
+    return this.mesh.loadObject(resource);
   }
 
   start() {
@@ -108,7 +111,7 @@ export default class Engine {
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, screenW, screenH);
 
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 0.1;
     ctx.strokeColor = '#ffffff';
 
     let drawList = [];
@@ -119,7 +122,7 @@ export default class Engine {
       for (let p of triangle.points) {
         let p1 = rotateZ.multiplyVec(p);
         p1 = rotateX.multiplyVec(p1);
-        p1.z += 5;
+        p1.z += this.distance;
 
         points.push(p1);
       }
@@ -189,14 +192,20 @@ export default class Engine {
         ${Math.floor(100 + 155 * lightAmount)},
         0)`;
 
-      ctx.fill();
+      if (this.fill) {
+        ctx.fill();
+      }
 
-//      ctx.stroke();
+      if (this.wireframe) {
+        ctx.stroke();
+      }
     }
 
     let diff = new Date().getTime() - startTs;
 
-    console.log(`skip=${skipped}, ms=${diff}`);
+    if (this.debug) {
+      console.log(`skip=${skipped}, ms=${diff}`);
+    }
 
     requestAnimationFrame(this.render);
   }

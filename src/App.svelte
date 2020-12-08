@@ -10,8 +10,39 @@
 
   let canvasEl;
 
+  let models = [
+    {
+      name: 'airboat',
+      distance: 10,
+    },
+    {
+      name: 'cow',
+      distance: 8,
+    },
+    {
+      name: 'cube',
+      distance: 3,
+    },
+    {
+      name: 'pumpkin',
+      distance: 8,
+    },
+    {
+      name: 'teapot',
+      distance: 5,
+    },
+    {
+      name: 'teddy',
+      disance: 6,
+    },
+  ]
+
+  let currentModel = 'cube';
+
   let started = false;
   let debug = false;
+  let fill = true;
+  let wireframe = false;
   let rotate = false;
 
   let input;
@@ -21,17 +52,26 @@
     started = true;
     input = new Input();
 
+    let model = null;
+    models.forEach((m) => {
+      if (m.name == currentModel) {
+        model = m;
+      }
+    });
+
     engine = new Engine({input, canvasEl});
     engine.rotate = rotate;
     engine.debug = debug;
+    engine.fill = fill;
+    engine.wireframe = wireframe;
 
     if (debug) {
       console.log(engine);
     }
 
-    let model = '../cube3d/model/teapot.obj';
+    let resource = `../cube3d/model/${model.name}.obj`;
     engine
-      .openModel(model)
+      .openModel({resource: resource, distance: model.distance})
       .then(() => { engine.start(); });
   }
 
@@ -51,6 +91,26 @@
     }
   }
 
+  function toggleFill() {
+    fill = !fill;
+    if (engine) {
+      engine.fill = fill;
+    }
+    if (fill) {
+      console.clear();
+    }
+  }
+
+  function toggleWireframe() {
+    wireframe = !wireframe;
+    if (engine) {
+      engine.wireframe = wireframe;
+    }
+    if (wireframe) {
+      console.clear();
+    }
+  }
+
   function toggleDebug() {
     debug = !debug;
     if (engine) {
@@ -65,6 +125,13 @@
     rotate = !rotate;
     if (engine) {
       engine.rotate = rotate;
+    }
+  }
+
+  function onChangeModel() {
+    if (started) {
+      stop();
+      start();
     }
   }
 
@@ -92,8 +159,19 @@
   <h1>3D</h1>
   <div>
     <button on:click={toggleGame}>{started ? 'Stop' : 'Start'}</button>
-    <button on:click={toggleDebug}>{debug ? 'Debug: On' : 'Debug: Off'}</button>
+    <button on:click={toggleFill}>{fill ? 'Fill: On' : 'Fill: Off'}</button>
+    <button on:click={toggleWireframe}>{wireframe ? 'Wireframe: On' : 'Wireframe: Off'}</button>
     <button on:click={toggleRotate}>{rotate ? 'Rotate: On' : 'Rotate: Off'}</button>
+    <button on:click={toggleDebug}>{debug ? 'Debug: On' : 'Debug: Off'}</button>
+
+    <span>
+      <label for="select_model">Model:</label>
+      <select id="select_model" bind:value={currentModel} on:change={onChangeModel}>
+        {#each models as model}
+          <option selected={currentModel === model.name || undefined}>{model.name}</option>
+        {/each}
+      </select>
+    </span>
   </div>
 
   <container class="container">
