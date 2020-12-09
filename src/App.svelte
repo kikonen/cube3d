@@ -184,7 +184,6 @@
     box-sizing: border-box;
 
     text-align: center;
-    padding: 0.5rem;
     margin: 0;
   }
 

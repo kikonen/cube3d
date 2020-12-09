@@ -69,8 +69,8 @@ export default class Matrix4x4 {
   }
 
   // https://en.wikipedia.org/wiki/Rotation_matrix
-  static rotationZ(thetaAngle) {
-    let theta = thetaAngle / 180 * Math.PI;
+  static rotationZ(thetaD) {
+    let theta = thetaD / 180 * Math.PI;
 
     return new Matrix4x4(
       [
@@ -83,14 +83,28 @@ export default class Matrix4x4 {
   }
 
   // https://en.wikipedia.org/wiki/Rotation_matrix
-  static rotationX(thetaAngle) {
-    let theta = thetaAngle / 180 * Math.PI;
+  static rotationX(thetaD) {
+    let theta = thetaD / 180 * Math.PI;
 
     return new Matrix4x4(
       [
         [1, 0, 0, 0],
         [0, Math.cos(theta), Math.sin(theta), 0],
         [0, -Math.sin(theta), Math.cos(theta), 0],
+        [0, 0, 0, 1],
+      ]
+    );
+  }
+
+  // https://en.wikipedia.org/wiki/Rotation_matrix
+  static rotationY(thetaD) {
+    let theta = thetaD / 180 * Math.PI;
+
+    return new Matrix4x4(
+      [
+        [Math.cos(theta), 0, Math.sin(theta), 0],
+        [0, 1, 0, 0],
+        [-Math.sin(theta), 0, Math.cos(theta), 0],
         [0, 0, 0, 1],
       ]
     );

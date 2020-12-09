@@ -23,6 +23,16 @@ export default class Engine {
     this.rotate = false;
     this.debug = false;
     this.ticks = 0;
+
+    this.theta = 0;
+    this.thetaX = 0;
+    this.thetaY = 0;
+    this.thetaZ = 0;
+
+    this.distance = 4;
+
+    this.camera = new Vec3D(0, 0, 0);
+    this.light = new Vec3D(0, 0, -1).normalize();
   }
 
   openModel({resource, distance}) {
@@ -37,10 +47,6 @@ export default class Engine {
       return;
     }
     this.started = true;
-
-    this.theta = 0;
-    this.thetaZ = 0;
-    this.thetaX = 0;
 
     this.currentTime = Date.now();
     setTimeout(this.tick, TICK_SPEED);
@@ -62,16 +68,52 @@ export default class Engine {
     let elapsed = now - this.currentTime;
     let timeScale = elapsed / WORLD_SPEED;
 
-    timeScale = 0.2;
-//    console.log(timeScale, elapsed);
-
     if (this.rotate) {
       this.thetaZ += timeScale * 8;
       this.thetaX += timeScale * 4;
     }
 
+    this.handleKeys(timeScale);
+
     this.currentTime = now;
     setTimeout(this.tick, TICK_SPEED);
+  }
+
+  handleKeys(dt) {
+    let m = 0.1;
+    if (this.input.keys.forward) {
+      this.camera.z -= m * dt;
+    }
+    if (this.input.keys.backward) {
+      this.camera.z += m * dt;
+    }
+    if (this.input.keys.left) {
+      this.camera.x -= m * dt;
+    }
+    if (this.input.keys.right) {
+      this.camera.x += m * dt;
+    }
+
+    let r = 3;
+    if (this.input.keys.rotateXMinus) {
+      this.thetaX -= r * dt;
+    }
+    if (this.input.keys.rotateXPlus) {
+      this.thetaX += r * dt;
+    }
+    if (this.input.keys.rotateYMinus) {
+      this.thetaY -= r * dt;
+    }
+    if (this.input.keys.rotateYPlus) {
+      this.thetaY += r * dt;
+    }
+    if (this.input.keys.rotateZMinus) {
+      this.thetaZ -= r * dt;
+    }
+    if (this.input.keys.rotateZPlus) {
+      this.thetaZ += r * dt;
+    }
+
   }
 
   render() {
@@ -88,9 +130,6 @@ export default class Engine {
       this.ctx2D = canvas.getContext("2d", { alpha: false });
     }
 
-    let camera = new Vec3D(0, 0, 0);
-    let light = new Vec3D(0, 0, -1).normalize();
-
     let screenW = canvas.width;
     let screenH = canvas.height;
 
@@ -100,8 +139,9 @@ export default class Engine {
     let fov = 90;
 
     let projection = Matrix4x4.projectionMatrix(aspectRatio, fov, near, far);
-    let rotateZ = Matrix4x4.rotationZ(this.thetaZ);
     let rotateX = Matrix4x4.rotationX(this.thetaX);
+    let rotateY = Matrix4x4.rotationY(this.thetaY);
+    let rotateZ = Matrix4x4.rotationZ(this.thetaZ);
 
 //    let ctx = screen.getContext("2d");
     let ctx = this.ctx2D;
@@ -120,8 +160,11 @@ export default class Engine {
       let points = [];
 
       for (let p of triangle.points) {
-        let p1 = rotateZ.multiplyVec(p);
+        let p1 = p;
         p1 = rotateX.multiplyVec(p1);
+        p1 = rotateY.multiplyVec(p1);
+        p1 = rotateZ.multiplyVec(p1);
+
         p1.z += this.distance;
 
         points.push(p1);
@@ -131,13 +174,13 @@ export default class Engine {
       let line2 = points[2].minus(points[0]);
       let normal = line1.cross(line2).normalize();
 
-      let dot = normal.dot(points[0].minus(camera));
+      let dot = normal.dot(points[0].minus(this.camera));
       if (dot >= 0) {
         skipped += 1;
         continue;
       }
 
-      let lightAmount = normal.dot(light);
+      let lightAmount = normal.dot(this.light);
 
       let projectedPoints = [];
 
@@ -162,8 +205,8 @@ export default class Engine {
 
 
     drawList.sort((a, b) => {
-      let ma = a[2][0].z;
-      let mb = b[2][0].z;
+      let ma = (a[2][0].z + a[2][1].z + a[2][2].z) / 3;
+      let mb = (b[2][0].z + b[2][1].z + b[2][2].z) / 3;
 
       return ma > mb ? -1 : (mb == ma ? 0 : 1);
     });
