@@ -25,11 +25,31 @@ export default class Matrix4x4 {
     data.push(...rows[2]);
     data.push(...rows[3]);
     this.data = data;
+    this.rows = rows;
   }
 
   toString() {
     let d = this.data;
     return `[${d[C00]}, ${d[C01]}, ${d[C02]}, ${d[C03]}]\n[${d[C10]}, ${d[C11]}, ${d[C12]}, ${d[C13]}]\n[${d[C20]}, ${d[C21]}, ${d[C22]}, ${d[C23]}]\n[${d[C30]}, ${d[C31]}, ${d[C32]}, ${d[C33]}]`;
+  }
+
+  multiply(b) {
+    let ra = this.rows;
+    let rb = b.rows;
+
+    let rows = [
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+    ];
+
+    for (let i = 0; i < 4; i++) {
+      for (let j = 0; j < 4; j++) {
+        rows[i][j] = ra[i][0] * rb[0][j] + ra[i][1] * rb[1][j] + ra[i][2] * rb[2][j] + ra[i][3] * rb[3][j];
+      }
+    }
+    return new Matrix4x4(rows);
   }
 
   multiplyVec(v) {
@@ -49,6 +69,17 @@ export default class Matrix4x4 {
         [0, 1, 0, 0],
         [0, 0, 1, 0],
         [0, 0, 0, 1],
+      ]
+    );
+  }
+
+  static translationMatrix(x, y, z) {
+    return new Matrix4x4(
+      [
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [x, y, z, 1],
       ]
     );
   }

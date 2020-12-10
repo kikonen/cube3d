@@ -139,9 +139,11 @@ export default class Engine {
     let fov = 90;
 
     let projection = Matrix4x4.projectionMatrix(aspectRatio, fov, near, far);
+
     let rotateX = Matrix4x4.rotationX(this.thetaX);
     let rotateY = Matrix4x4.rotationY(this.thetaY);
     let rotateZ = Matrix4x4.rotationZ(this.thetaZ);
+    let rotate = rotateX.multiply(rotateY).multiply(rotateZ);
 
 //    let ctx = screen.getContext("2d");
     let ctx = this.ctx2D;
@@ -160,10 +162,7 @@ export default class Engine {
       let points = [];
 
       for (let p of triangle.points) {
-        let p1 = p;
-        p1 = rotateX.multiplyVec(p1);
-        p1 = rotateY.multiplyVec(p1);
-        p1 = rotateZ.multiplyVec(p1);
+        let p1 = rotate.multiplyVec(p);
 
         p1.z += this.distance;
 
@@ -175,7 +174,7 @@ export default class Engine {
       let normal = line1.cross(line2).normalize();
 
       let dot = normal.dot(points[0].minus(this.camera));
-      if (dot >= 0) {
+      if (dot > 0) {
         skipped += 1;
         continue;
       }
