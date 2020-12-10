@@ -3,6 +3,8 @@ export default class PhysicsEngine {
     this.keys = {
       left: false,
       right: false,
+      up: false,
+      down: false,
       forward: false,
       backward: false,
       turnLeft: false,
@@ -24,9 +26,11 @@ export default class PhysicsEngine {
       KeyQ: 'rotateZMinus',
       KeyE: 'rotateZPlus',
       KeyW: 'forward',
-      KeyA: 'left',
       KeyS: 'backward',
-      KeyD: 'left',
+      KeyA: 'left',
+      KeyD: 'right',
+      KeyZ: 'up',
+      KeyC: 'down',
     };
   }
 

@@ -3,6 +3,7 @@
   import {afterUpdate} from 'svelte';
   import { createEventDispatcher } from 'svelte';
 
+  import Vec3D from './Vec3D.js';
   import Input from './Input.js';
   import Engine from './Engine.js';
 
@@ -13,27 +14,27 @@
   let models = [
     {
       name: 'airboat',
-      distance: 10,
+      pos: new Vec3D(0, 0, 10),
     },
     {
       name: 'cow',
-      distance: 8,
+      pos: new Vec3D(0, 0, 8),
     },
     {
       name: 'cube',
-      distance: 3,
+      pos: new Vec3D(0, 0, 3),
     },
     {
       name: 'pumpkin',
-      distance: 8,
+      pos: new Vec3D(0, 0, 8),
     },
     {
       name: 'teapot',
-      distance: 5,
+      pos: new Vec3D(0, 0, 5),
     },
     {
       name: 'teddy',
-      disance: 6,
+      pos: new Vec3D(0, 0, 6),
     },
   ]
 
@@ -71,7 +72,7 @@
 
     let resource = `../cube3d/model/${model.name}.obj`;
     engine
-      .openModel({resource: resource, distance: model.distance})
+      .openModel({resource: resource, pos: model.pos})
       .then(() => { engine.start(); });
   }
 

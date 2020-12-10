@@ -18,28 +18,27 @@ export default class Engine {
     this.input = input;
     this.canvasEl = canvasEl;
 
-    this.mesh = new Mesh();
+    this.objects = [];
 
     this.rotate = false;
     this.debug = false;
     this.ticks = 0;
 
-    this.theta = 0;
-    this.thetaX = 0;
-    this.thetaY = 0;
-    this.thetaZ = 0;
-
-    this.distance = 4;
-
     this.camera = new Vec3D(0, 0, 0);
+    this.cameraAngleX = 0;
+    this.cameraAngleY = 0;
+    this.cameraAngleZ = 0;
+
     this.light = new Vec3D(0, 0, -1).normalize();
   }
 
-  openModel({resource, distance}) {
+  openModel({resource, pos}) {
     this.resource = resource;
-    this.distance = distance;
+    this.pos = pos;
 
-    return this.mesh.loadObject(resource);
+    return new Mesh().loadObject(resource).then((mesh) => {
+      this.objects.push(mesh);
+    });
   }
 
   start() {
@@ -69,8 +68,9 @@ export default class Engine {
     let timeScale = elapsed / WORLD_SPEED;
 
     if (this.rotate) {
-      this.thetaZ += timeScale * 8;
-      this.thetaX += timeScale * 4;
+      let mesh = this.objects[0];
+      mesh.thetaZ += timeScale * 8;
+      mesh.thetaX += timeScale * 4;
     }
 
     this.handleKeys(timeScale);
@@ -93,25 +93,33 @@ export default class Engine {
     if (this.input.keys.right) {
       this.camera.x += m * dt;
     }
+    if (this.input.keys.up) {
+      this.camera.y -= m * dt;
+    }
+    if (this.input.keys.down) {
+      this.camera.y += m * dt;
+    }
+
 
     let r = 3;
+    let mesh = this.objects[0];
     if (this.input.keys.rotateXMinus) {
-      this.thetaX -= r * dt;
+      mesh.thetaX -= r * dt;
     }
     if (this.input.keys.rotateXPlus) {
-      this.thetaX += r * dt;
+      mesh.thetaX += r * dt;
     }
     if (this.input.keys.rotateYMinus) {
-      this.thetaY -= r * dt;
+      mesh.thetaY -= r * dt;
     }
     if (this.input.keys.rotateYPlus) {
-      this.thetaY += r * dt;
+      mesh.thetaY += r * dt;
     }
     if (this.input.keys.rotateZMinus) {
-      this.thetaZ -= r * dt;
+      mesh.thetaZ -= r * dt;
     }
     if (this.input.keys.rotateZPlus) {
-      this.thetaZ += r * dt;
+      mesh.thetaZ += r * dt;
     }
 
   }
@@ -140,15 +148,13 @@ export default class Engine {
 
     let projection = Matrix4x4.projectionMatrix(aspectRatio, fov, near, far);
 
-    let rotateX = Matrix4x4.rotationX(this.thetaX);
-    let rotateY = Matrix4x4.rotationY(this.thetaY);
-    let rotateZ = Matrix4x4.rotationZ(this.thetaZ);
-    let rotate = rotateX.multiply(rotateY).multiply(rotateZ);
+    let cameraRot = Matrix4x4.rotationX(this.cameraAngleX)
+        .multiply(Matrix4x4.rotationY(this.cameraAngleY))
+        .multiply(Matrix4x4.rotationZ(this.cameraAngleZ));
 
-//    let ctx = screen.getContext("2d");
+    let translatedCamera = cameraRot.multiplyVec(this.camera);
+
     let ctx = this.ctx2D;
-
-//    ctx.clearRect(0, 0, screenW, screenH);
 
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, screenW, screenH);
@@ -158,50 +164,55 @@ export default class Engine {
 
     let drawList = [];
 
-    for (let triangle of this.mesh.triangles) {
-      let points = [];
+    for (let mesh of this.objects) {
+      let rotate = Matrix4x4.rotationX(mesh.thetaX)
+          .multiply(Matrix4x4.rotationY(mesh.thetaY))
+          .multiply(Matrix4x4.rotationZ(mesh.thetaZ));
 
-      for (let p of triangle.points) {
-        let p1 = rotate.multiplyVec(p);
+      for (let triangle of mesh.triangles) {
+        let points = [];
 
-        p1.z += this.distance;
+        for (let p of triangle.points) {
+          let p1 = rotate.multiplyVec(p);
 
-        points.push(p1);
-      }
+          p1 = p1.plus(this.pos);
 
-      let line1 = points[1].minus(points[0]);
-      let line2 = points[2].minus(points[0]);
-      let normal = line1.cross(line2).normalize();
-
-      let dot = normal.dot(points[0].minus(this.camera));
-      if (dot > 0) {
-        skipped += 1;
-        continue;
-      }
-
-      let lightAmount = normal.dot(this.light);
-
-      let projectedPoints = [];
-
-      for (let p of points) {
-        let projected = projection.multiplyVec(p);
-        if (projected.w != 0) {
-          projected.x /= projected.w;
-          projected.y /= projected.w;
-          projected.z /= projected.w;
+          points.push(p1);
         }
 
-        projected = projected.add(1);
+        let line1 = points[1].minus(points[0]);
+        let line2 = points[2].minus(points[0]);
+        let normal = line1.cross(line2).normalize();
 
-        projected.x *= 0.5 * screenW;
-        projected.y *= 0.5 * screenH;
+        let dot = normal.dot(points[0].minus(translatedCamera));
+        if (dot > 0) {
+          skipped += 1;
+          continue;
+        }
 
-        projectedPoints.push(projected);
+        let lightAmount = normal.dot(this.light);
+
+        let projectedPoints = [];
+
+        for (let p of points) {
+          let projected = projection.multiplyVec(p);
+          if (projected.w != 0) {
+            projected.x /= projected.w;
+            projected.y /= projected.w;
+            projected.z /= projected.w;
+          }
+
+          projected = projected.add(1);
+
+          projected.x *= 0.5 * screenW;
+          projected.y *= 0.5 * screenH;
+
+          projectedPoints.push(projected);
+        }
+
+        drawList.push([triangle, lightAmount, projectedPoints]);
       }
-
-      drawList.push([triangle, lightAmount, projectedPoints]);
     }
-
 
     drawList.sort((a, b) => {
       let ma = (a[2][0].z + a[2][1].z + a[2][2].z) / 3;
@@ -229,9 +240,11 @@ export default class Engine {
       }
       ctx.closePath();
 
+      let color = triangle.color;
+
       ctx.fillStyle = `rgb(
-        ${Math.floor(100 + 155 * lightAmount)},
-        ${Math.floor(100 + 155 * lightAmount)},
+        ${Math.floor(color[0] + 155 * lightAmount)},
+        ${Math.floor(color[1] + 155 * lightAmount)},
         0)`;
 
       if (this.fill) {

@@ -4,6 +4,12 @@ import Triangle from './Triangle.js';
 export default class Mesh {
   constructor(triangles) {
     this.triangles = triangles;
+
+    this.thetaX = 0;
+    this.thetaY = 0;
+    this.thetaZ = 0;
+
+    this.color = [100, 100, 0];
   }
 
   loadObject(resourceUrl) {
@@ -30,7 +36,8 @@ export default class Mesh {
                 vectors[parseInt(parts[1], 10) - 1],
                 vectors[parseInt(parts[2], 10) - 1],
                 vectors[parseInt(parts[3], 10) - 1]
-              ]);
+              ],
+              this.color);
             triangles.push(triangle);
             break;
           }
@@ -41,6 +48,8 @@ export default class Mesh {
 //      console.log(triangles);
 
       this.triangles = triangles;
+
+      return this;
     });
   }
 }
