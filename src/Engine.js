@@ -33,10 +33,8 @@ export default class Engine {
   }
 
   openModel({resource, pos}) {
-    this.resource = resource;
-    this.pos = pos;
-
     return new Mesh().loadObject(resource).then((mesh) => {
+      mesh.pos = pos;
       this.objects.push(mesh);
     });
   }
@@ -82,10 +80,10 @@ export default class Engine {
   handleKeys(dt) {
     let m = 0.1;
     if (this.input.keys.forward) {
-      this.camera.z -= m * dt;
+      this.camera.z += m * dt;
     }
     if (this.input.keys.backward) {
-      this.camera.z += m * dt;
+      this.camera.z -= m * dt;
     }
     if (this.input.keys.left) {
       this.camera.x -= m * dt;
@@ -148,11 +146,12 @@ export default class Engine {
 
     let projection = Matrix4x4.projectionMatrix(aspectRatio, fov, near, far);
 
-    let cameraRot = Matrix4x4.rotationX(this.cameraAngleX)
+    // https://mikro.naprvyraz.sk/docs/Coding/Atari/Maggie/3DCAM.TXT
+    let rotateCamera = Matrix4x4.rotationX(this.cameraAngleX)
         .multiply(Matrix4x4.rotationY(this.cameraAngleY))
         .multiply(Matrix4x4.rotationZ(this.cameraAngleZ));
 
-    let translatedCamera = cameraRot.multiplyVec(this.camera);
+    let translatedCamera = rotateCamera.multiplyVec(this.camera);
 
     let ctx = this.ctx2D;
 
@@ -173,18 +172,21 @@ export default class Engine {
         let points = [];
 
         for (let p of triangle.points) {
-          let p1 = rotate.multiplyVec(p);
+          let p2 = rotate.multiplyVec(p);
 
-          p1 = p1.plus(this.pos);
+          p2 = p2.plus(mesh.pos);
+          p2 = p2.minus(this.camera);
 
-          points.push(p1);
+          p2 = rotateCamera.multiplyVec(p2);
+
+          points.push(p2);
         }
 
         let line1 = points[1].minus(points[0]);
         let line2 = points[2].minus(points[0]);
         let normal = line1.cross(line2).normalize();
 
-        let dot = normal.dot(points[0].minus(translatedCamera));
+        let dot = normal.dot(points[0]);
         if (dot > 0) {
           skipped += 1;
           continue;

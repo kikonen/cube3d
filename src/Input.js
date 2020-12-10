@@ -29,7 +29,7 @@ export default class PhysicsEngine {
       KeyS: 'backward',
       KeyA: 'left',
       KeyD: 'right',
-      KeyZ: 'up',
+      KeyX: 'up',
       KeyC: 'down',
     };
   }
