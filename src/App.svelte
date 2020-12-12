@@ -38,6 +38,11 @@
     },
   ]
 
+  let nameToModel = {};
+  models.forEach((model) => {
+    nameToModel[model.name] = model;
+  });
+
   let currentModel = 'cube';
 
   let started = false;
@@ -57,13 +62,6 @@
     started = true;
     input = new Input();
 
-    let model = null;
-    models.forEach((m) => {
-      if (m.name == currentModel) {
-        model = m;
-      }
-    });
-
     fps = 0;
     engine = new Engine({input, canvasEl});
     engine.rotate = rotate;
@@ -75,9 +73,15 @@
       console.log(engine);
     }
 
-    let resource = `../cube3d/model/${model.name}.obj`;
+    let activeModels = [
+      nameToModel[currentModel],
+    ];
+    if (currentModel !== 'cube') {
+//      activeModels.push(nameToModel['cube']);
+    }
+
     engine
-      .openModel({resource: resource, pos: model.pos})
+      .loadModels({models: activeModels})
       .then(() => {
         engine.start();
         countFps();
@@ -98,7 +102,9 @@
     if (!started) {
       return;
     }
-
+    if (!engine.started) {
+      return;
+    }
 
     secs = (new Date().getTime() - engine.startTime.getTime()) / 1000;
     frames = engine.frames;

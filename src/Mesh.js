@@ -2,18 +2,27 @@ import Vec3D from './Vec3D.js';
 import Triangle from './Triangle.js';
 
 export default class Mesh {
-  constructor(triangles) {
+  constructor({triangles, debug}) {
+    this.model = null;
     this.triangles = triangles;
 
+    this.pos = new Vec3D();
     this.thetaX = 0;
     this.thetaY = 0;
     this.thetaZ = 0;
 
     this.color = [100, 100, 0];
+
+    this.debug = debug;
   }
 
-  loadObject(resourceUrl) {
-    return fetch(resourceUrl).then((response) => {
+  getResource(model) {
+    return `../cube3d/model/${model.name}.obj`;
+  }
+
+  loadObject(model) {
+    let url = this.getResource(model);
+    return fetch(url).then((response) => {
       return response.text();
     }).then((lines) => {
       let vectors = [];
@@ -48,10 +57,13 @@ export default class Mesh {
         }
       });
 
-//      console.log(vectors);
-//      console.log(triangles);
-
+      this.model = model;
+      this.pos = model.pos;
       this.triangles = triangles;
+
+      if (this.debug) {
+        console.log(this);
+      }
 
       return this;
     });

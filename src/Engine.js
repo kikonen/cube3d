@@ -32,11 +32,14 @@ export default class Engine {
     this.light = new Vec3D(0, 0, -1).normalize();
   }
 
-  openModel({resource, pos}) {
-    return new Mesh().loadObject(resource).then((mesh) => {
-      mesh.pos = pos;
-      this.objects.push(mesh);
+  loadModels({models}) {
+    let meshPromises = models.map((model) => {
+      return new Mesh({debug: this.debug}).loadObject(model).then((mesh) => {
+        this.objects.push(mesh);
+      });
     });
+
+    return Promise.all(meshPromises);
   }
 
   resetFrames() {
@@ -271,7 +274,7 @@ export default class Engine {
     let diff = new Date().getTime() - startTs;
 
     if (this.debug) {
-      console.log(`skip=${skipped}, ms=${diff}`);
+//      console.log(`skip=${skipped}, ms=${diff}`);
     }
 
     requestAnimationFrame(this.render);
