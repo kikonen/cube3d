@@ -162,8 +162,6 @@ export default class Engine {
         .multiply(Matrix4x4.rotationY(this.cameraAngleY))
         .multiply(Matrix4x4.rotationZ(this.cameraAngleZ));
 
-    let translatedCamera = rotateCamera.multiplyVec(this.camera);
-
     let ctx = this.ctx2D;
 
     ctx.fillStyle = "#FFFFFF";
@@ -178,6 +176,8 @@ export default class Engine {
       let rotate = Matrix4x4.rotationX(mesh.thetaX)
           .multiply(Matrix4x4.rotationY(mesh.thetaY))
           .multiply(Matrix4x4.rotationZ(mesh.thetaZ));
+
+      let meshToCamera = mesh.pos.minus(this.camera);
 
       for (let triangle of mesh.triangles) {
         let points = [];
@@ -233,36 +233,35 @@ export default class Engine {
 
     for (let el of drawList) {
       let triangle = el.triangle;
-      let lightAmount = el.lightAmount;
       let points = el.projectedPoints;
 
-      if (this.fill || this.wireframe) {
-        ctx.beginPath();
+      ctx.beginPath();
 
-        let first = true;
-        for (let p of points) {
-          if (first) {
+      if (this.fill || this.wireframe) {
+        for (let i = 0; i < points.length; i++) {
+          let p = points[i];
+          if (i == 0) {
             ctx.moveTo(p.x, p.y);
           } else {
             ctx.lineTo(p.x, p.y);
           }
-          first = false;
         }
-        ctx.closePath();
+      }
 
+      if (this.fill) {
         let color = triangle.color;
+        let lightAmount = el.lightAmount;
 
         ctx.fillStyle = `rgb(
         ${Math.floor(color[0] + 155 * lightAmount)},
         ${Math.floor(color[1] + 155 * lightAmount)},
         0)`;
-      }
 
-      if (this.fill) {
         ctx.fill();
       }
 
       if (this.wireframe) {
+        ctx.closePath();
         ctx.stroke();
       }
     }
