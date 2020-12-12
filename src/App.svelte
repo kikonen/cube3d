@@ -14,7 +14,7 @@
   let models = [
     {
       name: 'airboat',
-      pos: new Vec3D(0, 0, 10),
+      pos: new Vec3D(0, 0, 12),
     },
     {
       name: 'cow',
@@ -26,7 +26,7 @@
     },
     {
       name: 'pumpkin',
-      pos: new Vec3D(0, 0, 8),
+      pos: new Vec3D(0, 0, 2),
     },
     {
       name: 'teapot',
@@ -34,7 +34,7 @@
     },
     {
       name: 'teddy',
-      pos: new Vec3D(0, 0, 6),
+      pos: new Vec3D(0, 0, 30),
     },
   ]
 
