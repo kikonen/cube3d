@@ -31,11 +31,15 @@ export default class Mesh {
             break;
           }
           case 'f': {
+            let x = vectors[parseInt(parts[1].split('/')[0], 10) - 1];
+            let y = vectors[parseInt(parts[2].split('/')[0], 10) - 1];
+            let z = vectors[parseInt(parts[3].split('/')[0], 10) - 1];
+
             let triangle = new Triangle(
               [
-                vectors[parseInt(parts[1], 10) - 1],
-                vectors[parseInt(parts[2], 10) - 1],
-                vectors[parseInt(parts[3], 10) - 1]
+                x,
+                y,
+                z
               ],
               this.color);
             triangles.push(triangle);

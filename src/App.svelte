@@ -81,6 +81,8 @@
       .then(() => {
         engine.start();
         countFps();
+      }).catch((e) => {
+        console.error(e);
       });
   }
 
