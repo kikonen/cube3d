@@ -1,5 +1,9 @@
 import Vec3D from './Vec3D.js';
 
+const sin = Math.sin;
+const cos = Math.cos;
+const tan = Math.tan;
+
 const C00 = 0 * 4 + 0;
 const C01 = 0 * 4 + 1;
 const C02 = 0 * 4 + 2;
@@ -16,6 +20,9 @@ const C30 = 3 * 4 + 0;
 const C31 = 3 * 4 + 1;
 const C32 = 3 * 4 + 2;
 const C33 = 3 * 4 + 3;
+
+const TO_RAD_MUL = 1 / 180 * Math.PI;
+
 
 export default class Matrix4x4 {
   constructor(rows) {
@@ -86,7 +93,7 @@ export default class Matrix4x4 {
 
   // https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix
   static projectionMatrix(aspectRatio, fov, near, far) {
-    let f = 1 / Math.tan((fov / 2) / 180 * Math.PI);
+    let f = 1 / tan((fov / 2) * TO_RAD_MUL);
     let q = far / (far - near);
 
     return new Matrix4x4(
@@ -101,12 +108,12 @@ export default class Matrix4x4 {
 
   // https://en.wikipedia.org/wiki/Rotation_matrix
   static rotationZ(thetaD) {
-    let theta = thetaD / 180 * Math.PI;
+    let theta = thetaD * TO_RAD_MUL;
 
     return new Matrix4x4(
       [
-        [Math.cos(theta), Math.sin(theta), 0, 0],
-        [-Math.sin(theta), Math.cos(theta), 0, 0],
+        [cos(theta), sin(theta), 0, 0],
+        [-sin(theta), cos(theta), 0, 0],
         [0, 0, 1, 0],
         [0, 0, 0, 1],
       ]
@@ -115,13 +122,13 @@ export default class Matrix4x4 {
 
   // https://en.wikipedia.org/wiki/Rotation_matrix
   static rotationX(thetaD) {
-    let theta = thetaD / 180 * Math.PI;
+    let theta = thetaD * TO_RAD_MUL;
 
     return new Matrix4x4(
       [
         [1, 0, 0, 0],
-        [0, Math.cos(theta), Math.sin(theta), 0],
-        [0, -Math.sin(theta), Math.cos(theta), 0],
+        [0, cos(theta), sin(theta), 0],
+        [0, -sin(theta), cos(theta), 0],
         [0, 0, 0, 1],
       ]
     );
@@ -129,13 +136,13 @@ export default class Matrix4x4 {
 
   // https://en.wikipedia.org/wiki/Rotation_matrix
   static rotationY(thetaD) {
-    let theta = thetaD / 180 * Math.PI;
+    let theta = thetaD * TO_RAD_MUL;
 
     return new Matrix4x4(
       [
-        [Math.cos(theta), 0, Math.sin(theta), 0],
+        [cos(theta), 0, sin(theta), 0],
         [0, 1, 0, 0],
-        [-Math.sin(theta), 0, Math.cos(theta), 0],
+        [-sin(theta), 0, cos(theta), 0],
         [0, 0, 0, 1],
       ]
     );
