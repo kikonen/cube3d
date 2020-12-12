@@ -121,6 +121,7 @@
     fill = !fill;
     if (engine) {
       engine.fill = fill;
+      engine.resetFrames();
     }
     if (fill) {
       console.clear();
@@ -131,6 +132,7 @@
     wireframe = !wireframe;
     if (engine) {
       engine.wireframe = wireframe;
+      engine.resetFrames();
     }
     if (wireframe) {
       console.clear();
@@ -141,6 +143,7 @@
     debug = !debug;
     if (engine) {
       engine.debug = debug;
+      engine.resetFrames();
     }
     if (debug) {
       console.clear();

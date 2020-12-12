@@ -39,6 +39,11 @@ export default class Engine {
     });
   }
 
+  resetFrames() {
+    this.startTime = new Date();
+    this.frames = 0;
+  }
+
   start() {
     if (this.started) {
       return;
@@ -49,8 +54,7 @@ export default class Engine {
     setTimeout(this.tick, TICK_SPEED);
     this.render();
 
-    this.startTime = new Date();
-    this.frames = 0;
+    this.resetFrames();
   }
 
   stop() {
@@ -232,25 +236,27 @@ export default class Engine {
       let lightAmount = pair[1];
       let points = pair[2];
 
-      ctx.beginPath();
+      if (this.fill || this.wireframe) {
+        ctx.beginPath();
 
-      let first = true;
-      for (let p of points) {
-        if (first) {
-          ctx.moveTo(p.x, p.y);
-        } else {
-          ctx.lineTo(p.x, p.y);
+        let first = true;
+        for (let p of points) {
+          if (first) {
+            ctx.moveTo(p.x, p.y);
+          } else {
+            ctx.lineTo(p.x, p.y);
+          }
+          first = false;
         }
-        first = false;
-      }
-      ctx.closePath();
+        ctx.closePath();
 
-      let color = triangle.color;
+        let color = triangle.color;
 
-      ctx.fillStyle = `rgb(
+        ctx.fillStyle = `rgb(
         ${Math.floor(color[0] + 155 * lightAmount)},
         ${Math.floor(color[1] + 155 * lightAmount)},
         0)`;
+      }
 
       if (this.fill) {
         ctx.fill();
