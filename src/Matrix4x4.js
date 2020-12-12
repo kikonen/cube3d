@@ -27,10 +27,12 @@ const TO_RAD_MUL = 1 / 180 * Math.PI;
 export default class Matrix4x4 {
   constructor(rows) {
     let data = [];
-    data.push(...rows[0]);
-    data.push(...rows[1]);
-    data.push(...rows[2]);
-    data.push(...rows[3]);
+    for (let i = 0; i < 4; i++) {
+      let row = rows[i];
+      for (let j = 0; j < 4; j++) {
+        data.push(row[j]);
+      }
+    };
     this.data = data;
     this.rows = rows;
   }
@@ -41,10 +43,15 @@ export default class Matrix4x4 {
   }
 
   multiply(b) {
-    let ra = this.rows;
-    let rb = b.rows;
+    let rows_a = this.rows;
+    let rows_b = b.rows;
 
-    let rows = [
+    let rb0 = rows_b[0];
+    let rb1 = rows_b[1];
+    let rb2 = rows_b[2];
+    let rb3 = rows_b[3];
+
+    let res = [
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [0, 0, 0, 0],
@@ -52,11 +59,12 @@ export default class Matrix4x4 {
     ];
 
     for (let i = 0; i < 4; i++) {
+      let ra = rows_a[i];
       for (let j = 0; j < 4; j++) {
-        rows[i][j] = ra[i][0] * rb[0][j] + ra[i][1] * rb[1][j] + ra[i][2] * rb[2][j] + ra[i][3] * rb[3][j];
+        res[i][j] = ra[0] * rb0[j] + ra[1] * rb1[j] + ra[2] * rb2[j] + ra[3] * rb3[j];
       }
     }
-    return new Matrix4x4(rows);
+    return new Matrix4x4(res);
   }
 
   multiplyVec(v) {

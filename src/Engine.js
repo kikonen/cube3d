@@ -3,6 +3,7 @@ import {bindMethods} from './bindMethods.js';
 import Vec3D from './Vec3D.js';
 import Matrix4x4 from './Matrix4x4.js';
 import Triangle from './Triangle.js';
+import DrawElement from './DrawElement.js';
 
 import Mesh from './Mesh.js';
 
@@ -222,22 +223,18 @@ export default class Engine {
           projectedPoints.push(projected);
         }
 
-        drawList.push([triangle, lightAmount, projectedPoints]);
+        drawList.push(new DrawElement({triangle, lightAmount, projectedPoints}));
       }
     }
 
     drawList.sort((a, b) => {
-      let ma = (a[2][0].z + a[2][1].z + a[2][2].z) / 3;
-      let mb = (b[2][0].z + b[2][1].z + b[2][2].z) / 3;
-
-      return ma > mb ? -1 : (mb == ma ? 0 : 1);
+      return a.z > b.z ? -1 : (a.z == b.z ? 0 : 1);
     });
 
-
-    for (let pair of drawList) {
-      let triangle = pair[0];
-      let lightAmount = pair[1];
-      let points = pair[2];
+    for (let el of drawList) {
+      let triangle = el.triangle;
+      let lightAmount = el.lightAmount;
+      let points = el.projectedPoints;
 
       if (this.fill || this.wireframe) {
         ctx.beginPath();
