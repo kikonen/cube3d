@@ -48,6 +48,9 @@ export default class Engine {
     this.currentTime = Date.now();
     setTimeout(this.tick, TICK_SPEED);
     this.render();
+
+    this.startTime = new Date();
+    this.frames = 0;
   }
 
   stop() {
@@ -258,6 +261,7 @@ export default class Engine {
       }
     }
 
+    this.frames += 1;
     let diff = new Date().getTime() - startTs;
 
     if (this.debug) {

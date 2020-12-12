@@ -46,6 +46,10 @@
   let wireframe = false;
   let rotate = false;
 
+  let fps = 0;
+  let frames = 0;
+  let secs = 0;
+
   let input;
   let engine;
 
@@ -60,6 +64,7 @@
       }
     });
 
+    fps = 0;
     engine = new Engine({input, canvasEl});
     engine.rotate = rotate;
     engine.debug = debug;
@@ -73,7 +78,10 @@
     let resource = `../cube3d/model/${model.name}.obj`;
     engine
       .openModel({resource: resource, pos: model.pos})
-      .then(() => { engine.start(); });
+      .then(() => {
+        engine.start();
+        countFps();
+      });
   }
 
   function stop() {
@@ -82,6 +90,21 @@
     }
     engine.stop();
     started = false;
+  }
+
+  function countFps() {
+    if (!started) {
+      return;
+    }
+
+
+    secs = (new Date().getTime() - engine.startTime.getTime()) / 1000;
+    frames = engine.frames;
+    if (secs > 0) {
+      fps = Math.round(frames / secs, 2);
+    }
+
+    setTimeout(countFps, 100);
   }
 
   function toggleGame() {
@@ -178,6 +201,9 @@
   <container class="container">
     <canvas bind:this={canvasEl} class="canvas" width=400 height=400></canvas>
   </container>
+  <div>
+    {fps} fps <!-- ({frames} frames {secs} secs) -->
+  </div>
 </main>
 
 <style>
