@@ -70,7 +70,7 @@ export default class Matrix4x4 {
   multiplyVec(v) {
     let d = this.data;
     return new Vec3D(
-      v.x * d[C00] + v.y * d[C10] + v.z * d[C20]+ v.w * d[C20],
+      v.x * d[C00] + v.y * d[C10] + v.z * d[C20]+ v.w * d[C30],
       v.x * d[C01] + v.y * d[C11] + v.z * d[C21]+ v.w * d[C31],
       v.x * d[C02] + v.y * d[C12] + v.z * d[C22]+ v.w * d[C32],
       v.x * d[C03] + v.y * d[C13] + v.z * d[C23]+ v.w * d[C33],
@@ -124,7 +124,7 @@ export default class Matrix4x4 {
       [
         [r[0][0], r[1][0], r[2][0], 0],
         [r[0][1], r[1][1], r[2][1], 0],
-        [r[0][2], r[2][1], r[2][2], 0],
+        [r[0][2], r[1][2], r[2][2], 0],
         [
           r[3][0] * r[0][0] + r[3][1] * r[1][0] + r[3][2] * r[2][0],
           r[3][0] * r[0][1] + r[3][1] * r[1][1] + r[3][2] * r[2][1],
