@@ -60,6 +60,7 @@
   let secs = 0;
 
   let camera = null;
+  let cameraDir = null;
 
   let input;
   let engine;
@@ -119,6 +120,7 @@
     }
 
     camera = engine.camera;
+    cameraDir = engine.cameraDir;
 
     setTimeout(countFps, 100);
   }
@@ -226,6 +228,8 @@
       </div>
       <div>
         Camera: {camera ? camera : ''}
+        <br>
+        Dir: {cameraDir ? cameraDir : ''}
       </div>
     </div>
   </div>
