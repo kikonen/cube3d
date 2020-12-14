@@ -88,13 +88,60 @@ export default class Matrix4x4 {
     );
   }
 
-  static translationMatrix(x, y, z) {
+  static translationMatrix(p) {
     return new Matrix4x4(
       [
         [1, 0, 0, 0],
         [0, 1, 0, 0],
         [0, 0, 1, 0],
-        [x, y, z, 1],
+        [p.x, p.y, p.z, 1],
+      ]
+    );
+  }
+
+  static pointAtMatrix(pos, target, up0) {
+    let forward = target.minus(pos).normalize();
+
+    let a = forward.multiply(up0.dot(forward));
+    let up = up0.minus(a).normalize();
+
+    let right = up.cross(forward);
+
+    return new Matrix4x4(
+      [
+        [right.x, right.y, right.z, 0],
+        [up.x, up.y, up.z, 0],
+        [forward.x, forward.y, forward.z, 0],
+        [pos.x, pos.y, pos.z, 1],
+      ]
+    );
+  }
+
+  static quickInverseMatrix(m) {
+    let r = m.rows;
+
+    return new Matrix4x4(
+      [
+        [r[0][0], r[1][0], r[2][0], 0],
+        [r[0][1], r[1][1], r[2][1], 0],
+        [r[0][2], r[2][1], r[2][2], 0],
+        [
+          r[3][0] * r[0][0] + r[3][1] * r[1][0] + r[3][2] * r[2][0],
+          r[3][0] * r[0][1] + r[3][1] * r[1][1] + r[3][2] * r[2][1],
+          r[3][0] * r[0][2] + r[3][1] * r[1][2] + r[3][2] * r[2][2],
+          1,
+        ],
+      ]
+    );
+  }
+
+  static lookAtMatrix(a, b, c, t) {
+    return new Matrix4x4(
+      [
+        [a.x, b.x, c.x, 0],
+        [a.y, b.y, c.y, 0],
+        [a.z, b.z, c.z, 0],
+        [t.dot(a), t.dot(b), t.dot(c), 1],
       ]
     );
   }
@@ -115,42 +162,42 @@ export default class Matrix4x4 {
   }
 
   // https://en.wikipedia.org/wiki/Rotation_matrix
-  static rotationZ(thetaD) {
-    let theta = thetaD * TO_RAD_MUL;
-
-    return new Matrix4x4(
-      [
-        [cos(theta), sin(theta), 0, 0],
-        [-sin(theta), cos(theta), 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-      ]
-    );
-  }
-
-  // https://en.wikipedia.org/wiki/Rotation_matrix
-  static rotationX(thetaD) {
-    let theta = thetaD * TO_RAD_MUL;
+  static rotationX(angle) {
+    let rad = angle * TO_RAD_MUL;
 
     return new Matrix4x4(
       [
         [1, 0, 0, 0],
-        [0, cos(theta), sin(theta), 0],
-        [0, -sin(theta), cos(theta), 0],
+        [0, cos(rad), sin(rad), 0],
+        [0, -sin(rad), cos(rad), 0],
         [0, 0, 0, 1],
       ]
     );
   }
 
   // https://en.wikipedia.org/wiki/Rotation_matrix
-  static rotationY(thetaD) {
-    let theta = thetaD * TO_RAD_MUL;
+  static rotationY(angle) {
+    let rad = angle * TO_RAD_MUL;
 
     return new Matrix4x4(
       [
-        [cos(theta), 0, sin(theta), 0],
+        [cos(rad), 0, sin(rad), 0],
         [0, 1, 0, 0],
-        [-sin(theta), 0, cos(theta), 0],
+        [-sin(rad), 0, cos(rad), 0],
+        [0, 0, 0, 1],
+      ]
+    );
+  }
+
+  // https://en.wikipedia.org/wiki/Rotation_matrix
+  static rotationZ(angle) {
+    let rad = angle * TO_RAD_MUL;
+
+    return new Matrix4x4(
+      [
+        [cos(rad), sin(rad), 0, 0],
+        [-sin(rad), cos(rad), 0, 0],
+        [0, 0, 1, 0],
         [0, 0, 0, 1],
       ]
     );

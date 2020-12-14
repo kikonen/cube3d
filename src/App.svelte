@@ -17,6 +17,10 @@
       pos: new Vec3D(0, 0, 12),
     },
     {
+      name: 'axis',
+      pos: new Vec3D(0, 0, 20),
+    },
+    {
       name: 'cow',
       pos: new Vec3D(0, 0, 8),
     },
@@ -54,6 +58,8 @@
   let fps = 0;
   let frames = 0;
   let secs = 0;
+
+  let camera = null;
 
   let input;
   let engine;
@@ -111,6 +117,8 @@
     if (secs > 0) {
       fps = Math.round(frames / secs, 2);
     }
+
+    camera = engine.camera;
 
     setTimeout(countFps, 100);
   }
@@ -192,7 +200,7 @@
 
 <main>
   <h1>3D</h1>
-  <div>
+  <div class="buttons">
     <button on:click={toggleGame}>{started ? 'Stop' : 'Start'}</button>
     <button on:click={toggleFill}>{fill ? 'Fill: On' : 'Fill: Off'}</button>
     <button on:click={toggleWireframe}>{wireframe ? 'Wireframe: On' : 'Wireframe: Off'}</button>
@@ -209,36 +217,50 @@
     </span>
   </div>
 
-  <container class="container">
+  <div class="container">
     <canvas bind:this={canvasEl} class="canvas" width=400 height=400></canvas>
-  </container>
-  <div>
-    {fps} fps <!-- ({frames} frames {secs} secs) -->
+
+    <div class="info">
+      <div>
+        {fps} fps <!-- ({frames} frames {secs} secs) -->
+      </div>
+      <div>
+        Camera: {camera ? camera : ''}
+      </div>
+    </div>
   </div>
 </main>
 
 <style>
   main {
     box-sizing: border-box;
-
     text-align: center;
     margin: 0;
+  }
+
+  .buttons {
   }
 
   .container {
     box-sizing: border-box;
     padding: 0;
-    margin: 0;
+    margin: auto;
 
     background-color: red;
-    width: 400px;
+    width: 600px;
     height: 400px;
   }
 
   .canvas {
     background-color: black;
 
-    width: 400px;
+    width: 600px;
     height: 400px;
+
+    border: 1px solid;
+  }
+
+  .info {
+    text-align: left;
   }
 </style>

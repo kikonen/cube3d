@@ -95,6 +95,10 @@ export default class Vec3D {
     return this;
   }
 
+  scale(t) {
+    return new Vec3D(this.x * t, this.y * t, this.z * t, this.w);
+  }
+
   plus(b) {
     return new Vec3D(this.x + b.x, this.y + b.y, this.z + b.z, this.w);
   }

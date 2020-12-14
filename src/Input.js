@@ -19,18 +19,18 @@ export default class PhysicsEngine {
 
     this.keyMapping = {
       nop: 'nop',
-      ArrowUp: 'rotateXMinus',
-      ArrowDown: 'rotateXPlus',
-      ArrowLeft: 'rotateYMinus',
-      ArrowRight: 'rotateYPlus',
-      KeyQ: 'rotateZMinus',
-      KeyE: 'rotateZPlus',
+      ArrowUp: 'incY',
+      ArrowDown: 'decY',
+      ArrowLeft: 'decX',
+      ArrowRight: 'incX',
+      KeyX: 'decZ',
+      KeyC: 'incZ',
+      KeyQ: 'rotateXMinus',
+      KeyE: 'rotateXPlus',
       KeyW: 'forward',
       KeyS: 'backward',
-      KeyA: 'left',
-      KeyD: 'right',
-      KeyX: 'up',
-      KeyC: 'down',
+      KeyA: 'rotateYMinus',
+      KeyD: 'rotateYPlus',
     };
   }
 

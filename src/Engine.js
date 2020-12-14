@@ -4,6 +4,7 @@ import Vec3D from './Vec3D.js';
 import Matrix4x4 from './Matrix4x4.js';
 import Triangle from './Triangle.js';
 import DrawElement from './DrawElement.js';
+import Clip from './Clip.js';
 
 import Mesh from './Mesh.js';
 
@@ -26,6 +27,7 @@ export default class Engine {
     this.ticks = 0;
 
     this.camera = new Vec3D(0, 0, 0);
+    this.cameraDir = new Vec3D(0, 0, 1);
     this.cameraAngleX = 0;
     this.cameraAngleY = 0;
     this.cameraAngleZ = 0;
@@ -89,48 +91,62 @@ export default class Engine {
   }
 
   handleKeys(dt) {
-    let m = 0.1;
-    if (this.input.keys.forward) {
-      this.camera.z += m * dt;
-    }
-    if (this.input.keys.backward) {
-      this.camera.z -= m * dt;
-    }
-    if (this.input.keys.left) {
-      this.camera.x -= m * dt;
-    }
-    if (this.input.keys.right) {
-      this.camera.x += m * dt;
-    }
-    if (this.input.keys.up) {
-      this.camera.y -= m * dt;
-    }
-    if (this.input.keys.down) {
-      this.camera.y += m * dt;
-    }
-
-
-    let r = 3;
-    let mesh = this.objects[0];
+    let r = 1;
     if (this.input.keys.rotateXMinus) {
-      mesh.thetaX -= r * dt;
+      this.cameraAngleX -= r * dt;
     }
     if (this.input.keys.rotateXPlus) {
-      mesh.thetaX += r * dt;
+      this.cameraAngleX += r * dt;
     }
     if (this.input.keys.rotateYMinus) {
-      mesh.thetaY -= r * dt;
+      this.cameraAngleY -= r * dt;
     }
     if (this.input.keys.rotateYPlus) {
-      mesh.thetaY += r * dt;
+      this.cameraAngleY += r * dt;
     }
     if (this.input.keys.rotateZMinus) {
-      mesh.thetaZ -= r * dt;
+      this.cameraAngleZ -= r * dt;
     }
     if (this.input.keys.rotateZPlus) {
-      mesh.thetaZ += r * dt;
+      this.cameraAngleZ += r * dt;
     }
 
+    // https://mikro.naprvyraz.sk/docs/Coding/Atari/Maggie/3DCAM.TXT
+    let cameraRotate = Matrix4x4.rotationX(this.cameraAngleX)
+        .multiply(Matrix4x4.rotationY(this.cameraAngleY))
+        .multiply(Matrix4x4.rotationZ(this.cameraAngleZ));
+
+    this.cameraDir = cameraRotate.multiplyVec(new Vec3D(0, 0, 1));
+
+    let m = 0.4;
+
+    if (this.input.keys.decX) {
+      this.camera.x -= m * dt;
+    }
+    if (this.input.keys.incX) {
+      this.camera.x += m * dt;
+    }
+    if (this.input.keys.decY) {
+      this.camera.y -= m * dt;
+    }
+    if (this.input.keys.incY) {
+      this.camera.y += m * dt;
+    }
+    if (this.input.keys.decZ) {
+      this.camera.z -= m * dt;
+    }
+    if (this.input.keys.incZ) {
+      this.camera.z += m * dt;
+    }
+
+    let forward = this.cameraDir.multiply(m * dt);
+
+    if (this.input.keys.forward) {
+      this.camera = this.camera.minus(forward);
+    }
+    if (this.input.keys.backward) {
+      this.camera = this.camera.plus(forward);
+    }
   }
 
   render() {
@@ -155,12 +171,15 @@ export default class Engine {
     let far = 1000;
     let fov = 90;
 
-    let projection = Matrix4x4.projectionMatrix(aspectRatio, fov, near, far);
+    let up = new Vec3D(0, -1, 0);
+    let target = this.camera.plus(this.cameraDir);
 
-    // https://mikro.naprvyraz.sk/docs/Coding/Atari/Maggie/3DCAM.TXT
-    let rotateCamera = Matrix4x4.rotationX(this.cameraAngleX)
-        .multiply(Matrix4x4.rotationY(this.cameraAngleY))
-        .multiply(Matrix4x4.rotationZ(this.cameraAngleZ));
+    let cameraTranslate = Matrix4x4.pointAtMatrix(this.camera, target, up);
+    let viewTranslate = Matrix4x4.quickInverseMatrix(cameraTranslate);
+
+    let clip = new Clip({camera: this.camera, viewTranslate, near, far});
+
+    let projection = Matrix4x4.projectionMatrix(aspectRatio, fov, near, far);
 
     let ctx = this.ctx2D;
 
@@ -173,22 +192,17 @@ export default class Engine {
     let drawList = [];
 
     for (let mesh of this.objects) {
-      let rotate = Matrix4x4.rotationX(mesh.thetaX)
+      let world = Matrix4x4.rotationX(mesh.thetaX)
           .multiply(Matrix4x4.rotationY(mesh.thetaY))
-          .multiply(Matrix4x4.rotationZ(mesh.thetaZ));
-
-      let meshToCamera = mesh.pos.minus(this.camera);
+          .multiply(Matrix4x4.rotationZ(mesh.thetaZ)).
+          multiply(Matrix4x4.translationMatrix(mesh.pos));
 
       for (let triangle of mesh.triangles) {
         let points = [];
 
         for (let p of triangle.points) {
-          let p2 = rotate.multiplyVec(p);
-
-          p2 = p2.plus(mesh.pos);
-          p2 = p2.minus(this.camera);
-
-          p2 = rotateCamera.multiplyVec(p2);
+          let p2 = world.multiplyVec(p);
+          p2 = viewTranslate.multiplyVec(p2);
 
           points.push(p2);
         }
@@ -204,26 +218,28 @@ export default class Engine {
         }
 
         let lightAmount = normal.dot(this.light);
+        let clipped = clip.clip(new DrawElement({triangle, lightAmount, points}));
 
-        let projectedPoints = [];
+        for (let el of clipped) {
+          let projectedPoints = [];
 
-        for (let p of points) {
-          let projected = projection.multiplyVec(p);
-          if (projected.w != 0) {
-            projected.x /= projected.w;
-            projected.y /= projected.w;
-            projected.z /= projected.w;
+          for (let p of points) {
+            let projected = projection.multiplyVec(p);
+            if (projected.w != 0) {
+              projected = projected.divide(projected.w);
+            }
+
+            projected = projected.add(1);
+
+            projected.x *= 0.5 * screenW;
+            projected.y *= 0.5 * screenH;
+
+            projectedPoints.push(projected);
           }
+          el.setProjected(projectedPoints);
 
-          projected = projected.add(1);
-
-          projected.x *= 0.5 * screenW;
-          projected.y *= 0.5 * screenH;
-
-          projectedPoints.push(projected);
+          drawList.push(el);
         }
-
-        drawList.push(new DrawElement({triangle, lightAmount, projectedPoints}));
       }
     }
 
