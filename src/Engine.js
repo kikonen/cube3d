@@ -92,7 +92,7 @@ export default class Engine {
   }
 
   handleKeys(dt) {
-    let r = 1;
+    let r = 3.5;
     if (this.input.keys.rotateXMinus) {
       this.cameraAngleX -= r * dt;
     }
@@ -119,7 +119,7 @@ export default class Engine {
 
     this.cameraDir = cameraRotate.multiplyVec(new Vec3D(0, 0, 1));
 
-    let m = 0.4;
+    let m = 0.6;
 
     if (this.input.keys.decX) {
       this.camera.x -= m * dt;
@@ -178,7 +178,7 @@ export default class Engine {
     let cameraTranslate = Matrix4x4.pointAtMatrix(this.camera, target, up);
     let viewTranslate = Matrix4x4.quickInverseMatrix(cameraTranslate);
 
-    let nearPlane = new Plane(new Vec3D(0, 0, near), new Vec3D(0, 0, 1));
+    let nearPlane = new Plane(new Vec3D(0, 0, near), new Vec3D(0, 0, 1), this.debug);
 
     let projection = Matrix4x4.projectionMatrix(aspectRatio, fov, near, far);
     let viewOffset = new Vec3D(1, 1, 0);

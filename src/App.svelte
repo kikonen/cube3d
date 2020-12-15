@@ -40,6 +40,10 @@
       name: 'teddy',
       pos: new Vec3D(0, 0, 30),
     },
+    {
+      name: 'mountains',
+      pos: new Vec3D(0, 0, 30),
+    },
   ]
 
   let nameToModel = {};
@@ -47,7 +51,7 @@
     nameToModel[model.name] = model;
   });
 
-  let currentModel = 'cube';
+  let currentModel = 'axis';
 
   let started = false;
   let debug = false;
