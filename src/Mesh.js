@@ -11,7 +11,7 @@ export default class Mesh {
     this.thetaY = 0;
     this.thetaZ = 0;
 
-    this.color = [100, 100, 0];
+    this.color = [150, 150, 0];
 
     this.debug = debug;
   }

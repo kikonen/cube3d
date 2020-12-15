@@ -1,12 +1,18 @@
 export default class DrawElement {
-  constructor({triangle, lightAmount, points}) {
+  constructor({triangle, lightAmount, viewPoints}) {
     this.triangle = triangle;
+    this.color = triangle.color;
     this.lightAmount = lightAmount;
-    this.points = points;
+    this.viewPoints = viewPoints;
+
+    this.clippedTri = [];
+    this.projectedTri = [];
+    this.projectedZ = [];
   }
 
-  setProjected(projectedPoints) {
-    this.projectedPoints = projectedPoints;
-    this.z = (projectedPoints[0].z + projectedPoints[1].z + projectedPoints[2].z) / 3;
+  addProjected(projectedPoints) {
+    this.projectedTri.push(projectedPoints);
+    let z = (projectedPoints[0].z + projectedPoints[1].z + projectedPoints[2].z) / 3;
+    this.projectedZ.push(z);
   }
 }
