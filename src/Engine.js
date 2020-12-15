@@ -197,7 +197,6 @@ export default class Engine {
           .multiply(Matrix4x4.rotationY(mesh.thetaY))
           .multiply(Matrix4x4.rotationZ(mesh.thetaZ))
           .multiply(Matrix4x4.translationMatrix(mesh.pos));
-      world = Matrix4x4.translationMatrix(mesh.pos);
 
       for (let triangle of mesh.triangles) {
         let points = [];
