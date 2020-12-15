@@ -1,4 +1,5 @@
 import Vec3D from './Vec3D.js';
+import Triangle from './Triangle.js';
 
 export default class Plane {
   constructor(point, normal, debug) {
@@ -22,12 +23,11 @@ export default class Plane {
    * https://www.cubic.org/docs/3dclip.htm
    * https://stackoverflow.com/questions/5666222/3d-line-plane-intersection
    */
-  clip(el) {
+  clip(el, tri) {
     let inside = [];
     let outside = [];
 
-    let points = el.viewPoints;
-    let distances = points.forEach(p => {
+    let distances = tri.points.forEach(p => {
       let d = this.normal.dot(p) - this.distance;
       if (d < 0) {
         outside.push(p);
@@ -37,14 +37,13 @@ export default class Plane {
     });
 
     if (inside.length === 0) {
-      // all out
+      return [];
     } else if (inside.length === 3) {
-      el.clippedTri.push(points);
+      return [tri];
     } else {
       if (inside.length == 1) {
         // 1 inside
-
-        let points = [];
+        let color = tri.color;
 
         let p0 = inside[0];
 
@@ -53,18 +52,24 @@ export default class Plane {
         let p1 =  this.intersectLine(p0, outside[0]);
         let p2 = this.intersectLine(p0, outside[1]);
 
-        el.clippedTri.push([p0, p1, p2]);
         if (this.debug) {
-          el.color = [0, 0, 140];
+          color = [0, 0, 140];
         }
+        let tri1 = new Triangle([p0, p1, p2], color);
+
+        return [tri1];
       } else {
         // 2 inside
+        let color = tri.color;
 
         let p0 = inside[0];
 	let p1 = inside[1];
 	let p2 = this.intersectLine(p0, outside[0]);
 
-        el.clippedTri.push([p0, p1, p2]);
+        if (this.debug) {
+          color = [0, 140, 0];
+        }
+        let tri1 = new Triangle([p0, p1, p2], color);
 
 	// The second triangle is composed of one of he inside points, a
 	// new point determined by the intersection of the other side of the
@@ -73,11 +78,12 @@ export default class Plane {
 	p1 = p2;
 	p2 = this.intersectLine(inside[1], outside[0]);
 
-        el.clippedTri.push([p0, p1, p2]);
-
         if (this.debug) {
-          el.color = [0, 140, 0];
+          color = [140, 0, 0];
         }
+        let tri2 = new Triangle([p0, p1, p2], color);
+
+        return [tri1, tri2];
       }
     }
   }

@@ -180,6 +180,17 @@ export default class Engine {
 
     let nearPlane = new Plane(new Vec3D(0, 0, near), new Vec3D(0, 0, 1), this.debug);
 
+    let screenPlanes = [
+      // top
+      new Plane(new Vec3D(0, 0, 0), new Vec3D(0, 1, 0), this.debug),
+      // bottom
+      new Plane(new Vec3D(0, screenH - 1, 0), new Vec3D(0, -1, 0), this.debug),
+      // left
+      new Plane(new Vec3D(0, 0, 0), new Vec3D(1, 0, 0), this.debug),
+      // right
+      new Plane(new Vec3D(screenW - 1, 0, 0), new Vec3D(-1, 0, 0), this.debug),
+    ];
+
     let projection = Matrix4x4.projectionMatrix(aspectRatio, fov, near, far);
     let viewOffset = new Vec3D(1, 1, 0);
 
@@ -224,13 +235,14 @@ export default class Engine {
           return viewTranslate.multiplyVec(p);
         });
 
-        let el = new DrawElement({triangle, lightAmount, viewPoints});
-        nearPlane.clip(el);
+        let viewTri = new Triangle(viewPoints, triangle.color);
+        let el = new DrawElement({triangle, lightAmount});
+        el.clippedTri = nearPlane.clip(el, viewTri);
 
-        for (let clip of el.clippedTri) {
+        for (let tri of el.clippedTri) {
           let projectedPoints = [];
 
-          for (let p of clip) {
+          for (let p of tri.points) {
             let projected = projection.multiplyVec(p);
 
             if (projected.w != 0) {
@@ -244,7 +256,7 @@ export default class Engine {
 
             projectedPoints.push(projected);
           }
-          el.addProjected(projectedPoints);
+          el.addProjected(projectedPoints, tri);
         }
 
         drawList.push(el);
@@ -256,40 +268,62 @@ export default class Engine {
     });
 
     for (let el of drawList) {
-      let tri = el.projectedTri;
-
+      // clip to screen
       for (let tri of el.projectedTri) {
-        ctx.beginPath();
+        let tris = [];
+        tris.push(tri);
 
-        if (this.fill || this.wireframe) {
-          for (let i = 0; i < tri.length; i++) {
-            let p = tri[i];
-            if (i == 0) {
-              ctx.moveTo(p.x, p.y);
-            } else {
-              ctx.lineTo(p.x, p.y);
+        for (let s = 0; s < 4; s++) {
+          let processed = [];
+          while (tris.length > 0) {
+            let curr = tris.pop();
+
+            let plane = screenPlanes[s];
+            let clippedTris = plane.clip(el, curr);
+            for (let i = 0; i < clippedTris.length; i++) {
+              processed.push(clippedTris[i]);
             }
+          }
+          for (let i = 0; i < processed.length; i++) {
+            tris.push(processed[i]);
           }
         }
 
-        if (this.fill) {
-          let lightAmount = el.lightAmount;
+        // draw tris clipped to screen
+        for (let tri of tris) {
+          ctx.beginPath();
 
-          let shaded = el.color.map(c => {
-            return Math.max(Math.floor(c + (c / 2) * lightAmount), 0);
-          });
+          if (this.fill || this.wireframe) {
+            let points = tri.points;
+            for (let i = 0; i < points.length; i++) {
+              let p = points[i];
+              if (i == 0) {
+                ctx.moveTo(p.x, p.y);
+              } else {
+                ctx.lineTo(p.x, p.y);
+              }
+            }
+          }
 
-          ctx.fillStyle = `rgb(
+          if (this.fill) {
+            let lightAmount = el.lightAmount;
+
+            let shaded = tri.color.map(c => {
+              return Math.max(Math.floor(c + (c / 2) * lightAmount), 0);
+            });
+
+            ctx.fillStyle = `rgb(
             ${shaded[0]},
             ${shaded[1]},
             ${shaded[2]})`;
 
-          ctx.fill();
-        }
+            ctx.fill();
+          }
 
-        if (this.wireframe) {
-          ctx.closePath();
-          ctx.stroke();
+          if (this.wireframe) {
+            ctx.closePath();
+            ctx.stroke();
+          }
         }
       }
     }
