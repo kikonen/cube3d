@@ -27,10 +27,10 @@ const TO_RAD_MUL = 1 / 180 * Math.PI;
 export default class Matrix4x4 {
   constructor(rows) {
     let data = [];
-    for (let i = 0; i < 4; i++) {
-      let row = rows[i];
-      for (let j = 0; j < 4; j++) {
-        data.push(row[j]);
+    for (let r = 0; r < 4; r++) {
+      let row = rows[r];
+      for (let c = 0; c < 4; c++) {
+        data.push(row[c]);
       }
     };
     this.data = data;
@@ -58,12 +58,13 @@ export default class Matrix4x4 {
         [0, 0, 0, 0],
     ];
 
-    for (let i = 0; i < 4; i++) {
-      let ra = rows_a[i];
-      for (let j = 0; j < 4; j++) {
-        res[i][j] = ra[0] * rb0[j] + ra[1] * rb1[j] + ra[2] * rb2[j] + ra[3] * rb3[j];
+    for (let r = 0; r < 4; r++) {
+      let ra = rows_a[r];
+      for (let c = 0; c < 4; c++) {
+        res[r][c] = ra[0] * rb0[c] + ra[1] * rb1[c] + ra[2] * rb2[c] + ra[3] * rb3[c];
       }
     }
+
     return new Matrix4x4(res);
   }
 
@@ -77,7 +78,7 @@ export default class Matrix4x4 {
     );
   }
 
-  static identifyMatrix() {
+  static identityMatrix() {
     return new Matrix4x4(
       [
         [1, 0, 0, 0],
@@ -126,9 +127,9 @@ export default class Matrix4x4 {
         [r[0][1], r[1][1], r[2][1], 0],
         [r[0][2], r[1][2], r[2][2], 0],
         [
-          r[3][0] * r[0][0] + r[3][1] * r[1][0] + r[3][2] * r[2][0],
-          r[3][0] * r[0][1] + r[3][1] * r[1][1] + r[3][2] * r[2][1],
-          r[3][0] * r[0][2] + r[3][1] * r[1][2] + r[3][2] * r[2][2],
+          -(r[3][0] * r[0][0] + r[3][1] * r[1][0] + r[3][2] * r[2][0]),
+          -(r[3][0] * r[0][1] + r[3][1] * r[1][1] + r[3][2] * r[2][1]),
+          -(r[3][0] * r[0][2] + r[3][1] * r[1][2] + r[3][2] * r[2][2]),
           1,
         ],
       ]

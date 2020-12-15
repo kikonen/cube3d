@@ -142,10 +142,10 @@ export default class Engine {
     let forward = this.cameraDir.multiply(m * dt);
 
     if (this.input.keys.forward) {
-      this.camera = this.camera.minus(forward);
+      this.camera = this.camera.plus(forward);
     }
     if (this.input.keys.backward) {
-      this.camera = this.camera.plus(forward);
+      this.camera = this.camera.minus(forward);
     }
   }
 
@@ -180,6 +180,7 @@ export default class Engine {
     let clip = new Clip({camera: this.camera, viewTranslate, near, far});
 
     let projection = Matrix4x4.projectionMatrix(aspectRatio, fov, near, far);
+    let viewOffset = new Vec3D(1, 1, 0);
 
     let ctx = this.ctx2D;
 
@@ -194,24 +195,24 @@ export default class Engine {
     for (let mesh of this.objects) {
       let world = Matrix4x4.rotationX(mesh.thetaX)
           .multiply(Matrix4x4.rotationY(mesh.thetaY))
-          .multiply(Matrix4x4.rotationZ(mesh.thetaZ)).
-          multiply(Matrix4x4.translationMatrix(mesh.pos));
+          .multiply(Matrix4x4.rotationZ(mesh.thetaZ))
+          .multiply(Matrix4x4.translationMatrix(mesh.pos));
+      world = Matrix4x4.translationMatrix(mesh.pos);
 
       for (let triangle of mesh.triangles) {
         let points = [];
 
         for (let p of triangle.points) {
-          let p2 = world.multiplyVec(p);
-          p2 = viewTranslate.multiplyVec(p2);
-
-          points.push(p2);
+          points.push(world.multiplyVec(p));
         }
 
         let line1 = points[1].minus(points[0]);
         let line2 = points[2].minus(points[0]);
         let normal = line1.cross(line2).normalize();
 
-        let dot = normal.dot(points[0]);
+        let cameraRay = points[0].minus(this.camera);
+
+        let dot = normal.dot(cameraRay);
         if (dot > 0) {
           skipped += 1;
           continue;
@@ -224,12 +225,14 @@ export default class Engine {
           let projectedPoints = [];
 
           for (let p of points) {
-            let projected = projection.multiplyVec(p);
+            let vp = viewTranslate.multiplyVec(p);
+            let projected = projection.multiplyVec(vp);
+
             if (projected.w != 0) {
               projected = projected.divide(projected.w);
             }
 
-            projected = projected.add(1);
+            projected = projected.plus(viewOffset);
 
             projected.x *= 0.5 * screenW;
             projected.y *= 0.5 * screenH;
@@ -286,7 +289,7 @@ export default class Engine {
     let diff = new Date().getTime() - startTs;
 
     if (this.debug) {
-//      console.log(`skip=${skipped}, ms=${diff}`);
+      console.log(`skip=${skipped}, ms=${diff}`);
     }
 
     requestAnimationFrame(this.render);
