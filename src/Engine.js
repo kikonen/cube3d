@@ -3,7 +3,6 @@ import {bindMethods} from './bindMethods.js';
 import Vec3D from './Vec3D.js';
 import Matrix4x4 from './Matrix4x4.js';
 import Triangle from './Triangle.js';
-import DrawElement from './DrawElement.js';
 import Clip from './Clip.js';
 import Plane from './Plane.js';
 
@@ -220,7 +219,7 @@ export default class Engine {
     ctx.lineWidth = 0.1;
     ctx.strokeColor = '#ffffff';
 
-    let drawList = [];
+    let projectedTris = [];
 
     for (let mesh of this.objects) {
       let world = Matrix4x4.rotationX(mesh.thetaX)
@@ -253,11 +252,10 @@ export default class Engine {
           return viewTranslate.multiplyVec(p);
         });
 
-        let viewTri = new Triangle(viewPoints, triangle.color);
-        let el = new DrawElement({triangle, lightAmount});
-        el.clippedTri = nearPlane.clip(el, viewTri);
+        let viewTri = new Triangle(viewPoints, triangle.color, lightAmount);
+        let clippedTris = nearPlane.clip(viewTri);
 
-        for (let tri of el.clippedTri) {
+        for (let tri of clippedTris) {
           let projectedPoints = [];
 
           for (let p of tri.points) {
@@ -274,74 +272,72 @@ export default class Engine {
 
             projectedPoints.push(projected);
           }
-          el.addProjected(projectedPoints, tri);
-        }
 
-        drawList.push(el);
+          let projectedTri = new Triangle(projectedPoints, tri.color, tri.lightAmount);
+          projectedTris.push(projectedTri);
+        }
       }
     }
 
-    drawList.sort((a, b) => {
+    projectedTris.sort((a, b) => {
       return a.z > b.z ? -1 : (a.z == b.z ? 0 : 1);
     });
 
-    for (let el of drawList) {
-      // clip to screen
-      for (let tri of el.projectedTri) {
-        let tris = [];
-        tris.push(tri);
+    // clip to screen
+    for (let tri of projectedTris) {
+      let tris = [];
+      tris.push(tri);
 
-        for (let s = 0; s < 4; s++) {
-          let processed = [];
-          while (tris.length > 0) {
-            let curr = tris.pop();
+      for (let s = 0; s < 4; s++) {
+        let processed = [];
+        while (tris.length > 0) {
+          let curr = tris.pop();
 
-            let plane = screenPlanes[s];
-            let clippedTris = plane.clip(el, curr);
-            for (let i = 0; i < clippedTris.length; i++) {
-              processed.push(clippedTris[i]);
-            }
+          let plane = screenPlanes[s];
+          let clippedTris = plane.clip(curr);
+          for (let i = 0; i < clippedTris.length; i++) {
+            processed.push(clippedTris[i]);
           }
-          for (let i = 0; i < processed.length; i++) {
-            tris.push(processed[i]);
+        }
+        for (let i = 0; i < processed.length; i++) {
+          tris.push(processed[i]);
+        }
+      }
+
+      // draw tris clipped to screen
+      for (let tri of tris) {
+        ctx.beginPath();
+
+        if (this.fill || this.wireframe) {
+          let points = tri.points;
+          for (let i = 0; i < points.length; i++) {
+            let p = points[i];
+            if (i == 0) {
+              ctx.moveTo(p.x, p.y);
+            } else {
+              ctx.lineTo(p.x, p.y);
+            }
           }
         }
 
-        // draw tris clipped to screen
-        for (let tri of tris) {
-          ctx.beginPath();
+        if (this.fill) {
+          let lightAmount = tri.lightAmount;
 
-          if (this.fill || this.wireframe) {
-            let points = tri.points;
-            for (let i = 0; i < points.length; i++) {
-              let p = points[i];
-              if (i == 0) {
-                ctx.moveTo(p.x, p.y);
-              } else {
-                ctx.lineTo(p.x, p.y);
-              }
-            }
-          }
+          let shaded = tri.color.map(c => {
+            return Math.max(Math.floor(c + (c / 2) * lightAmount), 0);
+          });
 
-          if (this.fill) {
-            let lightAmount = el.lightAmount;
-
-            let shaded = tri.color.map(c => {
-              return Math.max(Math.floor(c + (c / 2) * lightAmount), 0);
-            });
-
-            ctx.fillStyle = `rgb(
+          ctx.fillStyle = `rgb(
             ${shaded[0]},
             ${shaded[1]},
             ${shaded[2]})`;
 
-            ctx.fill();
-          }
+          ctx.fill();
+        }
 
-          if (this.wireframe) {
-            ctx.closePath();
-            ctx.stroke();
-          }
+        if (this.wireframe) {
+          ctx.closePath();
+          ctx.stroke();
         }
       }
     }

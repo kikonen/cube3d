@@ -50,7 +50,8 @@ export default class Mesh {
                 y,
                 z
               ],
-              this.color);
+              this.color,
+              1);
             triangles.push(triangle);
             break;
           }

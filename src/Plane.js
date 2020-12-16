@@ -23,7 +23,7 @@ export default class Plane {
    * https://www.cubic.org/docs/3dclip.htm
    * https://stackoverflow.com/questions/5666222/3d-line-plane-intersection
    */
-  clip(el, tri) {
+  clip(tri) {
     let inside = [];
     let outside = [];
 
@@ -44,6 +44,7 @@ export default class Plane {
       if (inside.length == 1) {
         // 1 inside
         let color = tri.color;
+        let lightAmount = tri.lightAmount;
 
         let p0 = inside[0];
 
@@ -55,12 +56,13 @@ export default class Plane {
         if (this.debug) {
           color = [0, 0, 140];
         }
-        let tri1 = new Triangle([p0, p1, p2], color);
+        let tri1 = new Triangle([p0, p1, p2], color, lightAmount);
 
         return [tri1];
       } else {
         // 2 inside
         let color = tri.color;
+        let lightAmount = tri.lightAmount;
 
         let p0 = inside[0];
 	let p1 = inside[1];
@@ -69,7 +71,7 @@ export default class Plane {
         if (this.debug) {
           color = [0, 140, 0];
         }
-        let tri1 = new Triangle([p0, p1, p2], color);
+        let tri1 = new Triangle([p0, p1, p2], color, lightAmount);
 
 	// The second triangle is composed of one of he inside points, a
 	// new point determined by the intersection of the other side of the
@@ -81,7 +83,7 @@ export default class Plane {
         if (this.debug) {
           color = [140, 0, 0];
         }
-        let tri2 = new Triangle([p0, p1, p2], color);
+        let tri2 = new Triangle([p0, p1, p2], color, lightAmount);
 
         return [tri1, tri2];
       }
