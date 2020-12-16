@@ -274,6 +274,7 @@ export default class Engine {
           }
 
           let projectedTri = new Triangle(projectedPoints, tri.color, tri.lightAmount);
+          projectedTri.calculateZ();
           projectedTris.push(projectedTri);
         }
       }
@@ -331,7 +332,6 @@ export default class Engine {
             ${shaded[0]},
             ${shaded[1]},
             ${shaded[2]})`;
-
           ctx.fill();
         }
 

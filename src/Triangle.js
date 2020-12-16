@@ -8,6 +8,6 @@ export default class Triangle {
   }
 
   calculateZ() {
-    this.z = this.z || (this.points[0].z + this.points[1].z + this.poinst[2].z) / 3;
+    this.z = (this.points[0].z + this.points[1].z + this.points[2].z) / 3;
   }
 }
