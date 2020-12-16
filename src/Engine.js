@@ -33,7 +33,7 @@ export default class Engine {
     this.cameraAngleY = 0;
     this.cameraAngleZ = 0;
 
-    this.light = new Vec3D(0, 0, -1).normalize();
+    this.lightDir = new Vec3D(0, 0, -1);
   }
 
   loadModels({models}) {
@@ -118,8 +118,12 @@ export default class Engine {
         .multiply(Matrix4x4.rotationZ(this.cameraAngleZ));
 
     this.cameraDir = cameraRotate.multiplyVec(new Vec3D(0, 0, 1));
+    this.leftDir = cameraRotate.multiplyVec(new Vec3D(1, 0, 0));
+    this.upDir = cameraRotate.multiplyVec(new Vec3D(0, 1, 0));
 
-    let m = 0.6;
+    this.lightDir = cameraRotate.multiplyVec(new Vec3D(0, 0, -1));
+
+    let m = 0.7;
 
     if (this.input.keys.decX) {
       this.camera.x -= m * dt;
@@ -141,12 +145,26 @@ export default class Engine {
     }
 
     let forward = this.cameraDir.multiply(m * dt);
+    let left = this.leftDir.multiply(m * dt);
+    let up = this.upDir.multiply(m * dt);
 
     if (this.input.keys.forward) {
       this.camera = this.camera.plus(forward);
     }
     if (this.input.keys.backward) {
       this.camera = this.camera.minus(forward);
+    }
+    if (this.input.keys.left) {
+      this.camera = this.camera.plus(left);
+    }
+    if (this.input.keys.right) {
+      this.camera = this.camera.minus(left);
+    }
+    if (this.input.keys.up) {
+      this.camera = this.camera.plus(up);
+    }
+    if (this.input.keys.down) {
+      this.camera = this.camera.minus(up);
     }
   }
 
@@ -229,7 +247,7 @@ export default class Engine {
           continue;
         }
 
-        let lightAmount = normal.dot(this.light);
+        let lightAmount = normal.dot(this.lightDir);
 
         let viewPoints = worldPoints.map(p => {
           return viewTranslate.multiplyVec(p);
