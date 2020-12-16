@@ -5,14 +5,14 @@ export default class Plane {
   constructor(point, normal, debug) {
     this.point = point;
     this.normal = normal.normalize();
-    this.distance = this.normal.dot(this.point);
+    this.d = this.normal.dot(this.point);
     this.debug = debug;
   }
 
   intersectLine(lineStart, lineEnd) {
     let ad = lineStart.dot(this.normal);
     let bd = lineEnd.dot(this.normal);
-    let t = (this.distance - ad) / (bd - ad);
+    let t = (this.d - ad) / (bd - ad);
 
     let lineStartToEnd = lineEnd.minus(lineStart);
     let lineToIntersect = lineStartToEnd.multiply(t);
@@ -27,8 +27,8 @@ export default class Plane {
     let inside = [];
     let outside = [];
 
-    let distances = tri.points.forEach(p => {
-      let d = this.normal.dot(p) - this.distance;
+    tri.points.forEach(p => {
+      let d = this.normal.dot(p) - this.d;
       if (d < 0) {
         outside.push(p);
       } else {
