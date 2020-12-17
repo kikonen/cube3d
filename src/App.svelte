@@ -5,6 +5,7 @@
 
   import Vec3D from './Vec3D.js';
   import Input from './Input.js';
+  import Camera from './Camera.js';
   import Engine from './Engine.js';
 
   export let name;
@@ -43,6 +44,7 @@
     {
       name: 'mountains',
       pos: new Vec3D(0, 0, 30),
+      camera: new Camera(new Vec3D(0, 20, 40), new Vec3D(0, 0, 1)),
     },
   ]
 
@@ -70,6 +72,15 @@
 
   function start() {
     started = true;
+
+    let model = nameToModel[currentModel];
+    let activeModels = [
+      model,
+    ];
+    if (currentModel !== 'cube') {
+//      activeModels.push(nameToModel['cube']);
+    }
+
     input = new Input();
 
     fps = 0;
@@ -79,17 +90,14 @@
     engine.fill = fill;
     engine.wireframe = wireframe;
 
+    if (model.camera) {
+      engine.camera = model.camera;
+    }
+
     camera = engine.camera;
 
     if (debug) {
       console.log(engine);
-    }
-
-    let activeModels = [
-      nameToModel[currentModel],
-    ];
-    if (currentModel !== 'cube') {
-//      activeModels.push(nameToModel['cube']);
     }
 
     engine
