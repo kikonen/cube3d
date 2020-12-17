@@ -64,7 +64,6 @@
   let secs = 0;
 
   let camera = null;
-  let cameraDir = null;
 
   let input;
   let engine;
@@ -79,6 +78,8 @@
     engine.debug = debug;
     engine.fill = fill;
     engine.wireframe = wireframe;
+
+    camera = engine.camera;
 
     if (debug) {
       console.log(engine);
@@ -117,14 +118,12 @@
       return;
     }
 
+    camera = engine.camera;
     secs = (new Date().getTime() - engine.startTime.getTime()) / 1000;
     frames = engine.frames;
     if (secs > 0) {
       fps = Math.round(frames / secs, 2);
     }
-
-    camera = engine.camera;
-    cameraDir = engine.cameraDir;
 
     setTimeout(countFps, 100);
   }
@@ -230,11 +229,15 @@
       <div>
         {fps} fps <!-- ({frames} frames {secs} secs) -->
       </div>
-      <div>
-        Camera: {camera ? camera : ''}
-        <br>
-        Dir: {cameraDir ? cameraDir : ''}
-      </div>
+      {#if camera}
+        <div>
+          Camera: {camera.pos ? camera.pos : ''}
+          <br>
+          Dir: {camera.dir ? camera.dir : ''}
+          <br>
+          Camera angle: ({camera.angleX}, {camera.angleY}, {camera.angleZ})
+        </div>
+      {/if}
     </div>
   </div>
 </main>

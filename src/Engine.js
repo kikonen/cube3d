@@ -5,6 +5,7 @@ import Matrix4x4 from './Matrix4x4.js';
 import Triangle from './Triangle.js';
 import Clip from './Clip.js';
 import Plane from './Plane.js';
+import Camera from './Camera.js';
 
 import Mesh from './Mesh.js';
 
@@ -26,11 +27,7 @@ export default class Engine {
     this.debug = false;
     this.ticks = 0;
 
-    this.camera = new Vec3D(0, 0, 0);
-    this.cameraDir = new Vec3D(0, 0, 1);
-    this.cameraAngleX = 0;
-    this.cameraAngleY = 0;
-    this.cameraAngleZ = 0;
+    this.camera = new Camera(new Vec3D(0, 0, 0), new Vec3D(0, 0, 1));
 
     this.lightDir = new Vec3D(0, 0, -1);
   }
@@ -91,79 +88,81 @@ export default class Engine {
   }
 
   handleKeys(dt) {
+    let camera = this.camera;
+
     let r = 3.5;
     if (this.input.keys.rotateXMinus) {
-      this.cameraAngleX -= r * dt;
+      camera.angleX -= r * dt;
     }
     if (this.input.keys.rotateXPlus) {
-      this.cameraAngleX += r * dt;
+      camera.angleX += r * dt;
     }
     if (this.input.keys.rotateYMinus) {
-      this.cameraAngleY -= r * dt;
+      camera.angleY -= r * dt;
     }
     if (this.input.keys.rotateYPlus) {
-      this.cameraAngleY += r * dt;
+      camera.angleY += r * dt;
     }
     if (this.input.keys.rotateZMinus) {
-      this.cameraAngleZ -= r * dt;
+      camera.angleZ -= r * dt;
     }
     if (this.input.keys.rotateZPlus) {
-      this.cameraAngleZ += r * dt;
+      camera.angleZ += r * dt;
     }
 
     // https://mikro.naprvyraz.sk/docs/Coding/Atari/Maggie/3DCAM.TXT
-    let cameraRotate = Matrix4x4.rotationX(this.cameraAngleX)
-        .multiply(Matrix4x4.rotationY(this.cameraAngleY))
-        .multiply(Matrix4x4.rotationZ(this.cameraAngleZ));
+    let cameraRotate = Matrix4x4.rotationX(camera.angleX)
+        .multiply(Matrix4x4.rotationY(camera.angleY))
+        .multiply(Matrix4x4.rotationZ(camera.angleZ));
 
-    this.cameraDir = cameraRotate.multiplyVec(new Vec3D(0, 0, 1));
-    this.leftDir = cameraRotate.multiplyVec(new Vec3D(1, 0, 0));
-    this.upDir = cameraRotate.multiplyVec(new Vec3D(0, 1, 0));
+    camera.dir = cameraRotate.multiplyVec(new Vec3D(0, 0, 1));
+    camera.leftDir = cameraRotate.multiplyVec(new Vec3D(1, 0, 0));
+    camera.upDir = cameraRotate.multiplyVec(new Vec3D(0, 1, 0));
 
     this.lightDir = cameraRotate.multiplyVec(new Vec3D(0, 0, -1));
 
     let m = 0.7;
 
     if (this.input.keys.decX) {
-      this.camera.x -= m * dt;
+      camera.x -= m * dt;
     }
     if (this.input.keys.incX) {
-      this.camera.x += m * dt;
+      camera.x += m * dt;
     }
     if (this.input.keys.decY) {
-      this.camera.y -= m * dt;
+      camera.y -= m * dt;
     }
     if (this.input.keys.incY) {
-      this.camera.y += m * dt;
+      camera.y += m * dt;
     }
     if (this.input.keys.decZ) {
-      this.camera.z -= m * dt;
+      camera.z -= m * dt;
     }
     if (this.input.keys.incZ) {
-      this.camera.z += m * dt;
+      camera.z += m * dt;
     }
 
-    let forward = this.cameraDir.multiply(m * dt);
-    let left = this.leftDir.multiply(m * dt);
-    let up = this.upDir.multiply(m * dt);
+    let forward = camera.dir.multiply(m * dt);
+    let left = camera.leftDir.multiply(m * dt);
+    let up = camera.upDir.multiply(m * dt);
 
     if (this.input.keys.forward) {
-      this.camera = this.camera.plus(forward);
+      camera.pos = camera.pos.plus(forward);
     }
     if (this.input.keys.backward) {
-      this.camera = this.camera.minus(forward);
+      camera.pos = camera.pos.minus(forward);
     }
     if (this.input.keys.left) {
-      this.camera = this.camera.plus(left);
+      camera.pos = camera.pos.plus(left);
     }
     if (this.input.keys.right) {
-      this.camera = this.camera.minus(left);
+      camera.pos = camera.pos.minus(left);
     }
     if (this.input.keys.up) {
-      this.camera = this.camera.plus(up);
+      camera.pos = camera.pos.plus(up);
     }
     if (this.input.keys.down) {
-      this.camera = this.camera.minus(up);
+      camera.pos = camera.pos.minus(up);
     }
   }
 
@@ -189,10 +188,11 @@ export default class Engine {
     let far = 1000;
     let fov = 90;
 
+    let camera = this.camera;
     let up = new Vec3D(0, -1, 0);
-    let target = this.camera.plus(this.cameraDir);
+    let target = camera.pos.plus(camera.dir);
 
-    let cameraTranslate = Matrix4x4.pointAtMatrix(this.camera, target, up);
+    let cameraTranslate = Matrix4x4.pointAtMatrix(camera.pos, target, up);
     let viewTranslate = Matrix4x4.quickInverseMatrix(cameraTranslate);
 
     let nearPlane = new Plane(new Vec3D(0, 0, near), new Vec3D(0, 0, 1), this.debug);
@@ -238,7 +238,7 @@ export default class Engine {
         let line2 = worldPoints[2].minus(worldPoints[0]);
         let normal = line1.cross(line2).normalize();
 
-        let cameraRay = worldPoints[0].minus(this.camera);
+        let cameraRay = worldPoints[0].minus(camera.pos);
 
         let dot = normal.dot(cameraRay);
         if (dot > 0) {
