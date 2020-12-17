@@ -3,7 +3,6 @@ import {bindMethods} from './bindMethods.js';
 import Vec3D from './Vec3D.js';
 import Matrix4x4 from './Matrix4x4.js';
 import Triangle from './Triangle.js';
-import Clip from './Clip.js';
 import Plane from './Plane.js';
 import Camera from './Camera.js';
 
@@ -111,13 +110,13 @@ export default class Engine {
     }
 
     // https://mikro.naprvyraz.sk/docs/Coding/Atari/Maggie/3DCAM.TXT
-    let cameraRotate = Matrix4x4.rotationX(camera.angleX)
+    let cameraRotate = Matrix4x4.rotationZ(camera.angleZ)
         .multiply(Matrix4x4.rotationY(camera.angleY))
-        .multiply(Matrix4x4.rotationZ(camera.angleZ));
+        .multiply(Matrix4x4.rotationX(camera.angleX));
 
     camera.dir = cameraRotate.multiplyVec(new Vec3D(0, 0, 1));
     camera.leftDir = cameraRotate.multiplyVec(new Vec3D(1, 0, 0));
-    camera.upDir = cameraRotate.multiplyVec(new Vec3D(0, 1, 0));
+    camera.upDir = camera.dir.cross(camera.leftDir);
 
     this.lightDir = cameraRotate.multiplyVec(new Vec3D(0, 0, -1));
 
@@ -222,9 +221,9 @@ export default class Engine {
     let projectedTris = [];
 
     for (let mesh of this.objects) {
-      let world = Matrix4x4.rotationX(mesh.thetaX)
+      let world = Matrix4x4.rotationZ(mesh.thetaZ)
           .multiply(Matrix4x4.rotationY(mesh.thetaY))
-          .multiply(Matrix4x4.rotationZ(mesh.thetaZ))
+          .multiply(Matrix4x4.rotationX(mesh.thetaX))
           .multiply(Matrix4x4.translationMatrix(mesh.pos));
 
       for (let triangle of mesh.triangles) {
