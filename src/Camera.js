@@ -9,8 +9,12 @@ export default class Camera {
     this.rotate = this.createRotate(0, 0, 0);
 
     this.dir = new Vec3D(0, 0, 1);
-    this.leftDir = new Vec3D(1, 0, 0);
-    this.upDir = this.dir.cross(this.leftDir);
+    this.rightDir = new Vec3D(1, 0, 0);
+    this.upDir = this.dir.cross(this.rightDir);
+
+    this.angleX = 0;
+    this.angleY = 0;
+    this.angleZ = 90;
 
     this.lightDir = new Vec3D(0, 0, -1);
   }
@@ -25,6 +29,9 @@ export default class Camera {
   }
 
   updateMesh(mesh) {
+    if (!mesh) {
+      return;
+    }
     mesh.rotate = this.rotate;
   }
 
@@ -63,9 +70,19 @@ export default class Camera {
       let rot = this.rotate.multiply(this.createRotate(angleX, angleY, angleZ));
       this.rotate = rot;
 
-      this.dir = rot.multiplyVec(new Vec3D(0, 0, 1));
-      this.leftDir = rot.multiplyVec(new Vec3D(1, 0, 0));
-      this.upDir = this.dir.cross(this.leftDir);
+      this.dir = rot.multiplyVec(new Vec3D(0, 0, 1)).normalize();
+      this.rightDir = rot.multiplyVec(new Vec3D(1, 0, 0)).normalize();
+      this.upDir = this.dir.cross(this.rightDir).normalize();
+
+      let n = this.dir;
+      let dx = n.dot(new Vec3D(1, 0, 0));
+      let dy = n.dot(new Vec3D(0, 1, 0));
+      let dz = n.dot(new Vec3D(0, 0, 1));
+      this.angleX = dx > 0 ? Math.acos(dx) / Math.PI * 180 : 0;
+      this.angleY = dy > 0 ? Math.acos(dy) / Math.PI * 180 : 0;
+      this.angleZ = dz > 0 ? Math.acos(dz) / Math.PI * 180 : 0;
+
+      this.lightDir = rot.multiplyVec(new Vec3D(0, 0, -1)).normalize();
     }
 
     let m = 0.7;
@@ -90,7 +107,7 @@ export default class Camera {
     }
 
     let forward = this.dir.multiply(m * dt);
-    let left = this.leftDir.multiply(m * dt);
+    let right = this.rightDir.multiply(m * dt);
     let up = this.upDir.multiply(m * dt);
 
     if (input.keys.forward) {
@@ -100,10 +117,10 @@ export default class Camera {
       this.pos = this.pos.minus(forward);
     }
     if (input.keys.left) {
-      this.pos = this.pos.plus(left);
+      this.pos = this.pos.plus(right);
     }
     if (input.keys.right) {
-      this.pos = this.pos.minus(left);
+      this.pos = this.pos.minus(right);
     }
     if (input.keys.up) {
       this.pos = this.pos.plus(up);

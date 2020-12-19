@@ -89,6 +89,17 @@ export default class Matrix4x4 {
     );
   }
 
+  static scaleMatrix(scale) {
+    return new Matrix4x4(
+      [
+        [scale, 0, 0, 0],
+        [0, scale, 0, 0],
+        [0, 0, scale, 0],
+        [0, 0, 0, 1],
+      ]
+    );
+  }
+
   static translationMatrix(p) {
     return new Matrix4x4(
       [
@@ -169,8 +180,8 @@ export default class Matrix4x4 {
     return new Matrix4x4(
       [
         [1, 0, 0, 0],
-        [0, cos(rad), -sin(rad), 0],
-        [0, sin(rad), cos(rad), 0],
+        [0, cos(rad), sin(rad), 0],
+        [0, -sin(rad), cos(rad), 0],
         [0, 0, 0, 1],
       ]
     );
@@ -182,9 +193,9 @@ export default class Matrix4x4 {
 
     return new Matrix4x4(
       [
-        [cos(rad), 0, sin(rad), 0],
+        [cos(rad), 0, -sin(rad), 0],
         [0, 1, 0, 0],
-        [-sin(rad), 0, cos(rad), 0],
+        [sin(rad), 0, cos(rad), 0],
         [0, 0, 0, 1],
       ]
     );
@@ -196,8 +207,8 @@ export default class Matrix4x4 {
 
     return new Matrix4x4(
       [
-        [cos(rad), -sin(rad), 0, 0],
-        [sin(rad), cos(rad), 0, 0],
+        [cos(rad), sin(rad), 0, 0],
+        [-sin(rad), cos(rad), 0, 0],
         [0, 0, 1, 0],
         [0, 0, 0, 1],
       ]

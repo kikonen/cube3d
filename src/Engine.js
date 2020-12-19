@@ -28,8 +28,6 @@ export default class Engine {
     this.ticks = 0;
 
     this.camera = new Camera(new Vec3D(0, 0, 0), new Vec3D(0, 0, 1));
-
-    this.lightDir = new Vec3D(0, 0, -1);
   }
 
   loadModels({models}) {
@@ -114,29 +112,36 @@ export default class Engine {
     let camera = this.camera;
     camera.updateMesh(this.cameraMesh);
 
-    let up = new Vec3D(0, -1, 0);
-    let target = camera.pos.plus(camera.dir);
-
     let ctx = this.ctx2D;
 
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, screenW, screenH);
 
-    let pad = 0;
-    let viewPort = new Viewport(0 + pad, 0 + pad, screenW - 2 * pad, screenH - 2 * pad, this.debug);
-    let worldCameraTranslate = Matrix4x4.pointAtMatrix(camera.pos, target, up);
-    let worldViewTranslate = Matrix4x4.quickInverseMatrix(worldCameraTranslate);
+    let up = new Vec3D(0, -1, 0);
 
-    for (let mesh of this.objects) {
-      skipped += this.renderMesh(mesh, ctx, viewPort, worldViewTranslate);
+    {
+      let target = camera.pos.plus(camera.dir);
+      let worldCameraTranslate = Matrix4x4.pointAtMatrix(camera.pos, target, up);
+      let worldViewTranslate = Matrix4x4.quickInverseMatrix(worldCameraTranslate);
+
+      let pad = 0;
+      let viewPort = new Viewport(0 + pad, 0 + pad, screenW - 2 * pad, screenH - 2 * pad, this.debug);
+
+      for (let mesh of this.objects) {
+        skipped += this.renderMesh(mesh, ctx, viewPort, worldViewTranslate, camera.pos, camera.lightDir);
+      }
     }
 
     if (this.cameraMesh) {
-      let camCameraTranslate = Matrix4x4.pointAtMatrix(new Vec3D(0, 0, 0), target, up);
-      let camViewTranslate = Matrix4x4.quickInverseMatrix(worldCameraTranslate);
+      let cp = new Vec3D(0, 0, 0);
+      let target = cp.plus(new Vec3D(0, 0, 1));
+      let cpTrans = Matrix4x4.pointAtMatrix(cp, target, up);
+      let cpView = Matrix4x4.quickInverseMatrix(cpTrans);
 
       let camPort = new Viewport(3, 3, 100, 100, this.debug);
-      skipped += this.renderMesh(this.cameraMesh, ctx, camPort, camViewTranslate);
+      camPort.offset = new Vec3D(0.5, 1.3);
+
+      skipped += this.renderMesh(this.cameraMesh, ctx, camPort, cpView, cp, new Vec3D(0, -1, -1));
     }
 
     this.frames += 1;
@@ -149,7 +154,7 @@ export default class Engine {
     requestAnimationFrame(this.render);
   }
 
-  renderMesh(mesh, ctx, viewPort, viewTranslate) {
+  renderMesh(mesh, ctx, viewPort, viewTranslate, viewPos, lightDir) {
     let skipped = 0;
 
     let camera = this.camera;
@@ -166,21 +171,22 @@ export default class Engine {
     let projectedTris = [];
 
     // ORDER: yaw-pitch-roll
-    let world = mesh.rotate
+    let world = Matrix4x4.scaleMatrix(mesh.scale)
+        .multiply(mesh.rotate)
         .multiply(Matrix4x4.translationMatrix(mesh.pos));
 
     for (let triangle of mesh.triangles) {
       let worldPoints = [];
 
       for (let p of triangle.points) {
-        worldPoints.push(world.multiplyVec(p.multiply(mesh.scale)));
+        worldPoints.push(world.multiplyVec(p));
       }
 
       let line1 = worldPoints[1].minus(worldPoints[0]);
       let line2 = worldPoints[2].minus(worldPoints[0]);
       let normal = line1.cross(line2).normalize();
 
-      let cameraRay = worldPoints[0].minus(camera.pos);
+      let cameraRay = worldPoints[0].minus(viewPos);
 
       let dot = normal.dot(cameraRay);
       if (dot > 0) {
@@ -188,16 +194,12 @@ export default class Engine {
         continue;
       }
 
-      let lightAmount = normal.dot(this.lightDir);
+      let lightAmount = normal.dot(lightDir);
 
       let viewPoints;
-      if (mesh.camera) {
-        viewPoints = worldPoints;
-      } else {
-        viewPoints = worldPoints.map(p => {
-          return viewTranslate.multiplyVec(p);
-        });
-      }
+      viewPoints = worldPoints.map(p => {
+        return viewTranslate.multiplyVec(p);
+      });
 
       let viewTri = new Triangle(viewPoints, triangle.color, lightAmount);
       let clippedTris = viewPort.nearPlane.clip(viewTri);

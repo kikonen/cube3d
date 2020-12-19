@@ -29,7 +29,7 @@ export default class Viewport {
     this.far = 1000;
     this.fov = 90;
 
-    this.offset = new Vec3D(1, 1, 0);
+    this.offset = new Vec3D(1, 1);
 
     this.nearPlane = new Plane(new Vec3D(x, y, this.near), new Vec3D(0, 0, 1), this.debug);
     this.projection = Matrix4x4.projectionMatrix(this.aspectRatio, this.fov, this.near, this.far);

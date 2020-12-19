@@ -59,8 +59,8 @@
   let cameraModel = {
     cameraMesh: true,
     name: 'axis',
-    pos: new Vec3D(0, 0, 2),
-    color: [0, 0, 150],
+    pos: new Vec3D(0, -1, 5),
+    color: [100, 100, 100],
     scale: 0.4,
   };
 
@@ -257,7 +257,7 @@
           <br>
           Dir: {camera.dir ? camera.dir : ''}
           <br>
-          Camera angle: ({camera.angleX}, {camera.angleY}, {camera.angleZ})
+          Camera angle: ({camera.angleX.toFixed(1)}, {camera.angleY.toFixed(1)}, {camera.angleZ.toFixed(1)})
         </div>
       {/if}
     </div>
