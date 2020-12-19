@@ -12,9 +12,7 @@ export default class Camera {
     this.rightDir = new Vec3D(1, 0, 0);
     this.upDir = this.dir.cross(this.rightDir);
 
-    this.angleX = 0;
-    this.angleY = 0;
-    this.angleZ = 90;
+    this.updateAngle();
 
     this.lightDir = new Vec3D(0, 0, -1);
   }
@@ -26,6 +24,19 @@ export default class Camera {
     return Matrix4x4.rotationZ(tz)
       .multiply(Matrix4x4.rotationY(ty))
       .multiply(Matrix4x4.rotationX(tx));
+  }
+
+  /**
+   * https://www.mathopenref.com/arccos.html
+   */
+  updateAngle() {
+    let n = this.dir;
+    let dx = n.dot(new Vec3D(1, 0, 0));
+    let dy = n.dot(new Vec3D(0, 1, 0));
+    let dz = n.dot(new Vec3D(0, 0, 1));
+    this.angleX = 180 - (Math.acos(dx) * 180 / Math.PI);
+    this.angleY = 180 - (Math.acos(dy) * 180 / Math.PI);
+    this.angleZ = (Math.acos(dz) * 180 / Math.PI);
   }
 
   updateMesh(mesh) {
@@ -74,13 +85,7 @@ export default class Camera {
       this.rightDir = rot.multiplyVec(new Vec3D(1, 0, 0)).normalize();
       this.upDir = this.dir.cross(this.rightDir).normalize();
 
-      let n = this.dir;
-      let dx = n.dot(new Vec3D(1, 0, 0));
-      let dy = n.dot(new Vec3D(0, 1, 0));
-      let dz = n.dot(new Vec3D(0, 0, 1));
-      this.angleX = dx > 0 ? Math.acos(dx) / Math.PI * 180 : 0;
-      this.angleY = dy > 0 ? Math.acos(dy) / Math.PI * 180 : 0;
-      this.angleZ = dz > 0 ? Math.acos(dz) / Math.PI * 180 : 0;
+      this.updateAngle();
 
       this.lightDir = rot.multiplyVec(new Vec3D(0, 0, -1)).normalize();
     }

@@ -117,6 +117,9 @@ export default class Engine {
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, screenW, screenH);
 
+    // NOTE KI mismatch between left vs. righthanded coords
+    // https://en.wikipedia.org/wiki/Cartesian_coordinate_system
+
     let up = new Vec3D(0, -1, 0);
 
     {

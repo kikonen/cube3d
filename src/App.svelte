@@ -253,11 +253,13 @@
       </div>
       {#if camera}
         <div>
-          Camera: {camera.pos ? camera.pos : ''}
+          Cmera position: ({camera.pos.x.toFixed(1)}, {camera.pos.y.toFixed(1)}, {camera.pos.z.toFixed(1)})
           <br>
-          Dir: {camera.dir ? camera.dir : ''}
-          <br>
-          Camera angle: ({camera.angleX.toFixed(1)}, {camera.angleY.toFixed(1)}, {camera.angleZ.toFixed(1)})
+          Cmera dir: ({camera.dir.x.toFixed(1)}, {camera.dir.y.toFixed(1)}, {camera.dir.z.toFixed(1)})
+          {#if camera.angleX}
+            <br>
+            Camera angle: ({camera.angleX.toFixed(1)}, {camera.angleY.toFixed(1)}, {camera.angleZ.toFixed(1)})
+          {/if}
         </div>
       {/if}
     </div>

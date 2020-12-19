@@ -29,8 +29,8 @@ export default class PhysicsEngine {
       KeyC: 'rotateXPlus',
       KeyW: 'forward',
       KeyS: 'backward',
-      KeyA: 'rotateYMinus',
-      KeyD: 'rotateYPlus',
+      KeyD: 'rotateYMinus',
+      KeyA: 'rotateYPlus',
     };
   }
 
