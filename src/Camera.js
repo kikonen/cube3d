@@ -5,47 +5,68 @@ export default class Camera {
   constructor(pos, dir) {
     this.pos = pos;
     this.dir = dir;
-    this.angleX = 0;
-    this.angleY = 0;
-    this.angleZ = 0;
+
+    this.rotate = this.createRotate(0, 0, 0);
+
+    this.dir = new Vec3D(0, 0, 1);
+    this.leftDir = new Vec3D(1, 0, 0);
+    this.upDir = this.dir.cross(this.leftDir);
+
+    this.lightDir = new Vec3D(0, 0, -1);
+  }
+
+  /**
+   * ORDER: yaw-pitch-roll
+   */
+  createRotate(tx, ty, tz) {
+    return Matrix4x4.rotationZ(tz)
+      .multiply(Matrix4x4.rotationY(ty))
+      .multiply(Matrix4x4.rotationX(tx));
+  }
+
+  updateMesh(mesh) {
+    mesh.rotate = this.rotate;
   }
 
   /**
    *
+   * https://mikro.naprvyraz.sk/docs/Coding/Atari/Maggie/3DCAM.TXT
    * http://danceswithcode.net/engineeringnotes/rotations_in_3d/rotations_in_3d_part1.html
    */
   move(input, dt) {
-
     let r = 3.5;
+
+    let angleX = 0;
+    let angleY = 0;
+    let angleZ = 0;
+
     if (input.keys.rotateXMinus) {
-      this.angleX -= r * dt;
+      angleX -= r * dt;
     }
     if (input.keys.rotateXPlus) {
-      this.angleX += r * dt;
+      angleX += r * dt;
     }
     if (input.keys.rotateYMinus) {
-      this.angleY -= r * dt;
+      angleY -= r * dt;
     }
     if (input.keys.rotateYPlus) {
-      this.angleY += r * dt;
+      angleY += r * dt;
     }
     if (input.keys.rotateZMinus) {
-      this.angleZ -= r * dt;
+      angleZ -= r * dt;
     }
     if (input.keys.rotateZPlus) {
-      this.angleZ += r * dt;
+      angleZ += r * dt;
     }
 
-    // https://mikro.naprvyraz.sk/docs/Coding/Atari/Maggie/3DCAM.TXT
-    let thisRotate = Matrix4x4.rotationZ(this.angleZ)
-        .multiply(Matrix4x4.rotationY(this.angleY))
-        .multiply(Matrix4x4.rotationX(this.angleX));
+    if (angleX !== 0 || angleY !== 0 || angleZ !== 0) {
+      let rot = this.rotate.multiply(this.createRotate(angleX, angleY, angleZ));
+      this.rotate = rot;
 
-    this.dir = thisRotate.multiplyVec(new Vec3D(0, 0, 1));
-    this.leftDir = thisRotate.multiplyVec(new Vec3D(1, 0, 0));
-    this.upDir = this.dir.cross(this.leftDir);
-
-    this.lightDir = thisRotate.multiplyVec(new Vec3D(0, 0, -1));
+      this.dir = rot.multiplyVec(new Vec3D(0, 0, 1));
+      this.leftDir = rot.multiplyVec(new Vec3D(1, 0, 0));
+      this.upDir = this.dir.cross(this.leftDir);
+    }
 
     let m = 0.7;
 

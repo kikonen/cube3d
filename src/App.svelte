@@ -16,37 +16,53 @@
     {
       name: 'airboat',
       pos: new Vec3D(0, 0, 12),
+      scale: 1,
     },
     {
       name: 'axis',
       pos: new Vec3D(0, 0, 20),
+      scale: 1,
     },
     {
       name: 'cow',
       pos: new Vec3D(0, 0, 8),
+      scale: 1,
     },
     {
       name: 'cube',
       pos: new Vec3D(0, 0, 3),
+      scale: 1,
     },
     {
       name: 'pumpkin',
       pos: new Vec3D(0, 0, 2),
+      scale: 1,
     },
     {
       name: 'teapot',
       pos: new Vec3D(0, 0, 5),
+      scale: 1,
     },
     {
       name: 'teddy',
       pos: new Vec3D(0, 0, 30),
+      scale: 1,
     },
     {
       name: 'mountains',
       pos: new Vec3D(0, 0, 30),
       camera: new Camera(new Vec3D(0, 20, 40), new Vec3D(0, 0, 1)),
+      scale: 1,
     },
   ]
+
+  let cameraModel = {
+    cameraMesh: true,
+    name: 'axis',
+    pos: new Vec3D(0, 0, 2),
+    color: [0, 0, 150],
+    scale: 0.4,
+  };
 
   let nameToModel = {};
   models.forEach((model) => {
@@ -76,10 +92,8 @@
     let model = nameToModel[currentModel];
     let activeModels = [
       model,
+      cameraModel,
     ];
-    if (currentModel !== 'cube') {
-//      activeModels.push(nameToModel['cube']);
-    }
 
     input = new Input();
 

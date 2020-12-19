@@ -1,5 +1,8 @@
 import Vec3D from './Vec3D.js';
+import Matrix4x4 from './Matrix4x4.js';
 import Triangle from './Triangle.js';
+
+const COLOR = [150, 150, 0];
 
 export default class Mesh {
   constructor({triangles, debug}) {
@@ -7,13 +10,24 @@ export default class Mesh {
     this.triangles = triangles;
 
     this.pos = new Vec3D();
-    this.thetaX = 0;
-    this.thetaY = 0;
-    this.thetaZ = 0;
+    this.rotate = this.createRotate(0, 0, 0);
 
-    this.color = [150, 150, 0];
+    this.color = COLOR;
 
     this.debug = debug;
+  }
+
+  /**
+   * ORDER: yaw-pitch-roll
+   */
+  createRotate(tx, ty, tz) {
+    return Matrix4x4.rotationZ(tz)
+      .multiply(Matrix4x4.rotationY(ty))
+      .multiply(Matrix4x4.rotationX(tx));
+  }
+
+  updateRotate(tx, ty, tz) {
+    this.rotate = this.rotate.multiply(this.createRotate(tx, ty, tz));
   }
 
   getResource(model) {
@@ -21,6 +35,11 @@ export default class Mesh {
   }
 
   loadObject(model) {
+    this.model = model;
+    this.color = model.color || COLOR;
+    this.scale = model.scale || 1;
+    this.pos = model.pos;
+
     let url = this.getResource(model);
     return fetch(url).then((response) => {
       return response.text();
@@ -58,8 +77,6 @@ export default class Mesh {
         }
       });
 
-      this.model = model;
-      this.pos = model.pos;
       this.triangles = triangles;
 
       if (this.debug) {
