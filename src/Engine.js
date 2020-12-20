@@ -131,11 +131,12 @@ export default class Engine {
       let viewPort = new Viewport(0 + pad, 0 + pad, screenW - 2 * pad, screenH - 2 * pad, this.debug);
 
       for (let mesh of this.objects) {
-        skipped += this.renderMesh(mesh, ctx, viewPort, worldViewTranslate, camera.pos, camera.lightDir);
+        skipped += this.renderMesh(mesh, ctx, viewPort, worldViewTranslate, camera.viewPos, camera.lightDir);
       }
     }
 
     if (this.cameraMesh) {
+      let viewPos = new Vec3D(0, 0, -10000);
       let cp = new Vec3D(0, 0, 0);
       let target = cp.plus(new Vec3D(0, 0, 1));
       let cpTrans = Matrix4x4.pointAtMatrix(cp, target, up);
@@ -144,7 +145,7 @@ export default class Engine {
       let camPort = new Viewport(3, 3, 100, 100, this.debug);
       camPort.offset = new Vec3D(0.5, 1.3);
 
-      skipped += this.renderMesh(this.cameraMesh, ctx, camPort, cpView, cp, new Vec3D(0, -1, -1));
+      skipped += this.renderMesh(this.cameraMesh, ctx, camPort, cpView, viewPos, new Vec3D(0, -1, -1));
     }
 
     this.frames += 1;
@@ -159,8 +160,6 @@ export default class Engine {
 
   renderMesh(mesh, ctx, viewPort, viewTranslate, viewPos, lightDir) {
     let skipped = 0;
-
-    let camera = this.camera;
 
     ctx.lineWidth = 0.5;
     ctx.strokeColor = '#a0a0a0';
@@ -189,9 +188,9 @@ export default class Engine {
       let line2 = worldPoints[2].minus(worldPoints[0]);
       let normal = line1.cross(line2).normalize();
 
-      let cameraRay = worldPoints[0].minus(viewPos);
+      let viewRay = worldPoints[0].minus(viewPos);
 
-      let dot = normal.dot(cameraRay);
+      let dot = normal.dot(viewRay);
       if (dot > 0) {
         skipped += 1;
         continue;

@@ -24,6 +24,7 @@ export default class Viewport {
     } else {
       this.aspectRatio = 0;
     }
+    this.aspectRatio = 1;
 
     this.near = 0.1;
     this.far = 1000;

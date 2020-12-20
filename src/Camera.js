@@ -12,6 +12,7 @@ export default class Camera {
     this.rightDir = new Vec3D(1, 0, 0);
     this.upDir = this.dir.cross(this.rightDir);
 
+    this.updateViewPos();
     this.updateAngle();
 
     this.lightDir = new Vec3D(0, 0, -1);
@@ -24,6 +25,11 @@ export default class Camera {
     return Matrix4x4.rotationZ(tz)
       .multiply(Matrix4x4.rotationY(ty))
       .multiply(Matrix4x4.rotationX(tx));
+  }
+
+  updateViewPos() {
+    let forward = this.dir.multiply(10000);
+    this.viewPos = this.pos.minus(forward);
   }
 
   /**
@@ -52,28 +58,31 @@ export default class Camera {
    * http://danceswithcode.net/engineeringnotes/rotations_in_3d/rotations_in_3d_part1.html
    */
   move(input, dt) {
+    let keys = input.keys;
     let r = 3.5;
+
+    let changed = true;
 
     let angleX = 0;
     let angleY = 0;
     let angleZ = 0;
 
-    if (input.keys.rotateXMinus) {
+    if (keys.rotateXMinus) {
       angleX -= r * dt;
     }
-    if (input.keys.rotateXPlus) {
+    if (keys.rotateXPlus) {
       angleX += r * dt;
     }
-    if (input.keys.rotateYMinus) {
+    if (keys.rotateYMinus) {
       angleY -= r * dt;
     }
-    if (input.keys.rotateYPlus) {
+    if (keys.rotateYPlus) {
       angleY += r * dt;
     }
-    if (input.keys.rotateZMinus) {
+    if (keys.rotateZMinus) {
       angleZ -= r * dt;
     }
-    if (input.keys.rotateZPlus) {
+    if (keys.rotateZPlus) {
       angleZ += r * dt;
     }
 
@@ -88,50 +97,61 @@ export default class Camera {
       this.updateAngle();
 
       this.lightDir = rot.multiplyVec(new Vec3D(0, 0, -1)).normalize();
+      changed = true;
     }
 
     let m = 0.7;
 
-    if (input.keys.decX) {
-      this.x -= m * dt;
-    }
-    if (input.keys.incX) {
-      this.x += m * dt;
-    }
-    if (input.keys.decY) {
-      this.y -= m * dt;
-    }
-    if (input.keys.incY) {
-      this.y += m * dt;
-    }
-    if (input.keys.decZ) {
-      this.z -= m * dt;
-    }
-    if (input.keys.incZ) {
-      this.z += m * dt;
+    // if (keys.decX) {
+    //   this.x -= m * dt;
+    // }
+    // if (keys.incX) {
+    //   this.x += m * dt;
+    // }
+    // if (keys.decY) {
+    //   this.y -= m * dt;
+    // }
+    // if (keys.incY) {
+    //   this.y += m * dt;
+    // }
+    // if (keys.decZ) {
+    //   this.z -= m * dt;
+    // }
+    // if (keys.incZ) {
+    //   this.z += m * dt;
+    // }
+
+    let isMove = keys.forward || keys.backward || keys.left || keys.right || keys.up || keys.down;
+
+    if (isMove) {
+      let forward = this.dir.multiply(m * dt);
+      let right = this.rightDir.multiply(m * dt);
+      let up = this.upDir.multiply(m * dt);
+
+      if (keys.forward) {
+        this.pos = this.pos.plus(forward);
+      }
+      if (keys.backward) {
+        this.pos = this.pos.minus(forward);
+      }
+      if (keys.left) {
+        this.pos = this.pos.plus(right);
+      }
+      if (keys.right) {
+        this.pos = this.pos.minus(right);
+      }
+      if (keys.up) {
+        this.pos = this.pos.plus(up);
+      }
+      if (keys.down) {
+        this.pos = this.pos.minus(up);
+      }
+
+      changed = true;
     }
 
-    let forward = this.dir.multiply(m * dt);
-    let right = this.rightDir.multiply(m * dt);
-    let up = this.upDir.multiply(m * dt);
-
-    if (input.keys.forward) {
-      this.pos = this.pos.plus(forward);
-    }
-    if (input.keys.backward) {
-      this.pos = this.pos.minus(forward);
-    }
-    if (input.keys.left) {
-      this.pos = this.pos.plus(right);
-    }
-    if (input.keys.right) {
-      this.pos = this.pos.minus(right);
-    }
-    if (input.keys.up) {
-      this.pos = this.pos.plus(up);
-    }
-    if (input.keys.down) {
-      this.pos = this.pos.minus(up);
+    if (changed) {
+      this.updateViewPos();
     }
   }
 }
