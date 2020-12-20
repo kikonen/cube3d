@@ -4,6 +4,7 @@
   import { createEventDispatcher } from 'svelte';
 
   import Vec3D from './Vec3D.js';
+  import Material from './Material.js';
   import Input from './Input.js';
   import Camera from './Camera.js';
   import Engine from './Engine.js';
@@ -34,6 +35,11 @@
       scale: 1,
     },
     {
+      name: 'rubik_cube',
+      pos: new Vec3D(0, 0, 3),
+      scale: 1,
+    },
+    {
       name: 'pumpkin',
       pos: new Vec3D(0, 0, 2),
       scale: 1,
@@ -60,7 +66,7 @@
     cameraMesh: true,
     name: 'axis',
     pos: new Vec3D(0, -1, 5),
-    color: [100, 100, 100],
+    material: new Material("cam", [100, 100, 100]),
     scale: 0.4,
   };
 

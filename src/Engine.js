@@ -203,7 +203,7 @@ export default class Engine {
         return viewTranslate.multiplyVec(p);
       });
 
-      let viewTri = new Triangle(viewPoints, triangle.color, lightAmount);
+      let viewTri = new Triangle(viewPoints, triangle.material, lightAmount);
       let clippedTris = viewPort.nearPlane.clip(viewTri);
 
       for (let tri of clippedTris) {
@@ -224,7 +224,7 @@ export default class Engine {
           projectedPoints.push(projected);
         }
 
-        let projectedTri = new Triangle(projectedPoints, tri.color, tri.lightAmount);
+        let projectedTri = new Triangle(projectedPoints, tri.material, tri.lightAmount);
         projectedTri.calculateZ();
         projectedTris.push(projectedTri);
       }
@@ -272,16 +272,7 @@ export default class Engine {
         }
 
         if (this.fill) {
-          let lightAmount = tri.lightAmount;
-
-          let shaded = tri.color.map(c => {
-            return Math.max(Math.floor(c + (c / 2) * lightAmount), 0);
-          });
-
-          ctx.fillStyle = `rgb(
-            ${shaded[0]},
-            ${shaded[1]},
-            ${shaded[2]})`;
+          ctx.fillStyle = tri.material.getColor(tri.lightAmount);
           ctx.fill();
         }
 

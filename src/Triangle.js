@@ -1,9 +1,9 @@
 import Vec3D from './Vec3D.js';
 
 export default class Triangle {
-  constructor(points, color, lightAmount) {
+  constructor(points, material, lightAmount) {
     this.points = points;
-    this.color = color;
+    this.material = material;
     this.lightAmount = lightAmount;
   }
 

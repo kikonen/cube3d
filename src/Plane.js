@@ -1,5 +1,6 @@
 import Vec3D from './Vec3D.js';
 import Triangle from './Triangle.js';
+import Material from './Material.js';
 
 export default class Plane {
   constructor(point, normal, debug) {
@@ -43,7 +44,7 @@ export default class Plane {
     } else {
       if (inside.length == 1) {
         // 1 inside
-        let color = tri.color;
+        let material = tri.material;
         let lightAmount = tri.lightAmount;
 
         let p0 = inside[0];
@@ -54,14 +55,14 @@ export default class Plane {
         let p2 = this.intersectLine(p0, outside[1]);
 
         if (this.debug) {
-          color = [0, 0, 140];
+          material = new Material('clip_one', [0, 0, 140]);
         }
-        let tri1 = new Triangle([p0, p1, p2], color, lightAmount);
+        let tri1 = new Triangle([p0, p1, p2], material, lightAmount);
 
         return [tri1];
       } else {
         // 2 inside
-        let color = tri.color;
+        let material = tri.material;
         let lightAmount = tri.lightAmount;
 
         let p0 = inside[0];
@@ -69,9 +70,9 @@ export default class Plane {
 	let p2 = this.intersectLine(p0, outside[0]);
 
         if (this.debug) {
-          color = [0, 140, 0];
+          material = new Material('clip_two_1', [0, 140, 0]);
         }
-        let tri1 = new Triangle([p0, p1, p2], color, lightAmount);
+        let tri1 = new Triangle([p0, p1, p2], material, lightAmount);
 
 	// The second triangle is composed of one of he inside points, a
 	// new point determined by the intersection of the other side of the
@@ -81,9 +82,9 @@ export default class Plane {
 	p2 = this.intersectLine(inside[1], outside[0]);
 
         if (this.debug) {
-          color = [140, 0, 0];
+          material = new Material('clip_two_2', [140, 0, 0]);
         }
-        let tri2 = new Triangle([p0, p1, p2], color, lightAmount);
+        let tri2 = new Triangle([p0, p1, p2], material, lightAmount);
 
         return [tri1, tri2];
       }
