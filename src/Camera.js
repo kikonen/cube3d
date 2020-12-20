@@ -28,8 +28,9 @@ export default class Camera {
   }
 
   updateViewPos() {
-    let forward = this.dir.multiply(10000);
-    this.viewPos = this.pos.minus(forward);
+//    let forward = this.dir.multiply(10000);
+//    this.viewPos = this.pos.minus(forward);
+    this.viewPos = this.pos;
   }
 
   /**
