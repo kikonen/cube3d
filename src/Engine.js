@@ -121,8 +121,10 @@ export default class Engine {
 
     let up = new Vec3D(0, -1, 0);
 
+    let totalVertexes = 0;
+    let totalTris = 0;
     let skippedTris = 0;
-    let duplicateVertixes = 0;
+    let duplicateVertexes = 0;
 
     {
       let target = camera.pos.plus(camera.dir);
@@ -134,8 +136,10 @@ export default class Engine {
 
       for (let mesh of this.objects) {
         let res = this.renderMesh(mesh, ctx, viewPort, worldViewTranslate, camera.viewPos, camera.lightDir);
+        totalTris += res.totalTris;
+        totalVertexes += res.totalVertexes;
         skippedTris += res.skippedTris;
-        duplicateVertixes += res.duplicateVertixes;
+        duplicateVertexes += res.duplicateVertexes;
       }
     }
 
@@ -151,14 +155,14 @@ export default class Engine {
 
       let res = this.renderMesh(this.cameraMesh, ctx, camPort, cpView, viewPos, new Vec3D(0, -1, -1));
 //      skippedTris += res.skippedTris;
-//      duplicateVertixes += res.duplicateVertixes;
+//      duplicateVertexes += res.duplicateVertexes;
     }
 
     this.frames += 1;
     let diff = performance.now() - startTs;
 
     if (this.debug) {
-      console.log(`skip=${skippedTris}, dup=${duplicateVertixes} ms=${diff.toFixed(2)}`);
+      console.log(`total=${totalTris}, skip=${skippedTris}, vertexes=${totalVertexes}, dup=${duplicateVertexes} ms=${diff.toFixed(2)}`);
     }
 
     requestAnimationFrame(this.render);
@@ -166,7 +170,7 @@ export default class Engine {
 
   renderMesh(mesh, ctx, viewPort, viewTranslate, viewPos, lightDir) {
     let skippedTris = 0;
-    let duplicateVertixes = 0;
+    let duplicateVertexes = 0;
 
     ctx.lineWidth = 0.5;
     ctx.strokeColor = '#a0a0a0';
@@ -217,19 +221,19 @@ export default class Engine {
       if (!viewVertexes[v0]) {
         viewVertexes[v0] = viewTranslate.multiplyVec(p0);
       } else {
-        duplicateVertixes++;
+        duplicateVertexes++;
       }
 
       if (!viewVertexes[v1]) {
         viewVertexes[v1] = viewTranslate.multiplyVec(p1);
       } else {
-        duplicateVertixes++;
+        duplicateVertexes++;
       }
 
       if (!viewVertexes[v2]) {
         viewVertexes[v2] = viewTranslate.multiplyVec(p2);
       } else {
-        duplicateVertixes++;
+        duplicateVertexes++;
       }
 
       let viewTri = new Triangle(tri.vertexIndexes, tri.material, lightAmount);
@@ -331,8 +335,10 @@ export default class Engine {
     }
 
     return {
+      totalTris: mesh.triangles.length,
+      totalVertexes: mesh.vertexes.length,
       skippedTris: skippedTris,
-      duplicateVertixes: duplicateVertixes,
+      duplicateVertexes: duplicateVertexes,
     };
   }
 }
