@@ -13,12 +13,18 @@ export default class Mesh {
     this.triangles = [];
 
     this.pos = new Vec3D();
+
     this.rotate = this.createRotate(0, 0, 0);
+    this.updateScale(1);
 
     this.material = MATERIAL;
 
     this.baseUrl = '../cube3d/model';
     this.debug = debug;
+  }
+
+  resetCache() {
+    this.worldMatrix = null;
   }
 
   /**
@@ -32,6 +38,27 @@ export default class Mesh {
 
   updateRotate(tx, ty, tz) {
     this.rotate = this.rotate.multiply(this.createRotate(tx, ty, tz));
+    this.resetCache();
+  }
+
+  updateScale(scale) {
+    this.scale = scale;
+    this.scaleMatrix = Matrix4x4.scaleMatrix(this.scale);
+    this.resetCache();
+  }
+
+  updatePos(pos) {
+    this.pos = pos;
+    this.resetCache();
+  }
+
+  getWorldMatrix() {
+    if (!this.worldMatrix) {
+      this.worldMatrix = this.scaleMatrix
+        .multiply(this.rotate)
+        .multiply(Matrix4x4.translationMatrix(this.pos));
+    }
+    return this.worldMatrix;
   }
 
   /**
@@ -138,8 +165,8 @@ export default class Mesh {
   loadObject(model) {
     this.model = model;
     this.material = model.material || this.material;
-    this.scale = model.scale || 1;
     this.pos = model.pos;
+    this.updateScale(model.scale);
 
     let url = `${this.baseUrl}/${model.name}.obj`;
     let materialLib = null;

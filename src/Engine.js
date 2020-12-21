@@ -182,12 +182,10 @@ export default class Engine {
     ctx.strokeColor = '#ffffff';
 
     // ORDER: yaw-pitch-roll
-    let world = Matrix4x4.scaleMatrix(mesh.scale)
-        .multiply(mesh.rotate)
-        .multiply(Matrix4x4.translationMatrix(mesh.pos));
+    let worldMat = mesh.getWorldMatrix();
 
     let worldVertexes = mesh.vertexes.map(v => {
-      return world.multiplyVec(v);
+      return worldMat.multiplyVec(v);
     });
 
     let viewVertexes = worldVertexes.map(v => { return null; });

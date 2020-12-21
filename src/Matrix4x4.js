@@ -26,20 +26,27 @@ const TO_RAD_MUL = 1 / 180 * Math.PI;
 
 export default class Matrix4x4 {
   constructor(rows) {
-    let data = [];
-    for (let r = 0; r < 4; r++) {
-      let row = rows[r];
-      for (let c = 0; c < 4; c++) {
-        data.push(row[c]);
-      }
-    };
-    this.data = data;
     this.rows = rows;
+    this.c00 = rows[0][0];
+    this.c01 = rows[0][1];
+    this.c02 = rows[0][2];
+    this.c03 = rows[0][3];
+    this.c10 = rows[1][0];
+    this.c11 = rows[1][1];
+    this.c12 = rows[1][2];
+    this.c13 = rows[1][3];
+    this.c20 = rows[2][0];
+    this.c21 = rows[2][1];
+    this.c22 = rows[2][2];
+    this.c23 = rows[2][3];
+    this.c30 = rows[3][0];
+    this.c31 = rows[3][1];
+    this.c32 = rows[3][2];
+    this.c33 = rows[3][3];
   }
 
   toString() {
-    let d = this.data;
-    return `[${d[C00]}, ${d[C01]}, ${d[C02]}, ${d[C03]}]\n[${d[C10]}, ${d[C11]}, ${d[C12]}, ${d[C13]}]\n[${d[C20]}, ${d[C21]}, ${d[C22]}, ${d[C23]}]\n[${d[C30]}, ${d[C31]}, ${d[C32]}, ${d[C33]}]`;
+    return `[${this.c00}, ${this.c01}, ${this.c02}, ${this.c03}\n[${this.c10}, ${this.c11}, ${this.c12}, ${this.c13}\n[${this.c20}, ${this.c21}, ${this.c22}, ${this.c23}\n[${this.c30}, ${this.c31}, ${this.c32}, ${this.c33}`;
   }
 
   multiply(b) {
@@ -69,12 +76,15 @@ export default class Matrix4x4 {
   }
 
   multiplyVec(v) {
-    let d = this.data;
+    let x = v.x;
+    let y = v.y;
+    let z = v.z;
+    let w = v.w;
     return new Vec3D(
-      v.x * d[C00] + v.y * d[C10] + v.z * d[C20]+ v.w * d[C30],
-      v.x * d[C01] + v.y * d[C11] + v.z * d[C21]+ v.w * d[C31],
-      v.x * d[C02] + v.y * d[C12] + v.z * d[C22]+ v.w * d[C32],
-      v.x * d[C03] + v.y * d[C13] + v.z * d[C23]+ v.w * d[C33],
+      x * this.c00 + y * this.c10 + z * this.c20 + w * this.c30,
+      x * this.c01 + y * this.c11 + z * this.c21 + w * this.c31,
+      x * this.c02 + y * this.c12 + z * this.c22 + w * this.c32,
+      x * this.c03 + y * this.c13 + z * this.c23 + w * this.c33,
     );
   }
 
