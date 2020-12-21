@@ -50,6 +50,7 @@ export default class Camera {
     if (!mesh) {
       return;
     }
+    this.mesh = mesh;
     mesh.rotate = this.rotate;
   }
 

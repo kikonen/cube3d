@@ -110,7 +110,7 @@
     input = new Input();
 
     fps = 0;
-    engine = new Engine({input, canvasEl});
+    engine = new Engine({input: input, canvas: canvasEl});
     engine.rotate = rotate;
     engine.debug = debug;
     engine.fill = fill;
