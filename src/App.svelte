@@ -40,6 +40,11 @@
       scale: 1,
     },
     {
+      name: 'texture_cube',
+      pos: new Vec3D(0, 0, 3),
+      scale: 1,
+    },
+    {
       name: 'pumpkin',
       pos: new Vec3D(0, 0, 75),
       scale: 1,

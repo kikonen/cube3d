@@ -246,7 +246,7 @@ export default class Engine {
         duplicateVertexes++;
       }
 
-      let viewTri = new Triangle(tri.vertexIndexes, tri.material, lightAmount);
+      let viewTri = new Triangle(tri.vertexIndexes, tri.textureIndexes, tri.material, lightAmount);
       let clipped = viewPort.nearPlane.clip(viewTri, viewVertexes);
       for (tri of clipped) {
         viewTris.push(tri);
@@ -288,7 +288,7 @@ export default class Engine {
         projectedVertexes[v2] = project(p2);
       }
 
-      let projectedTri = new Triangle(tri.vertexIndexes, tri.material, tri.lightAmount);
+      let projectedTri = new Triangle(tri.vertexIndexes, tri.textureIndexes, tri.material, tri.lightAmount);
       projectedTri.calculateZ(projectedVertexes);
       projectedTris.push(projectedTri);
     }
@@ -341,7 +341,12 @@ export default class Engine {
         }
 
         if (this.fill) {
-          ctx.fillStyle = tri.material.getColor(tri.lightAmount);
+          let texture = tri.material.getTexture(tri.lightAmount);
+          if (texture) {
+            ctx.fillStyle = ctx.createPattern(texture, "repeat");
+          } else {
+            ctx.fillStyle = tri.material.getColor(tri.lightAmount);
+          }
           ctx.fill();
         }
 

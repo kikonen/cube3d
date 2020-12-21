@@ -1,11 +1,18 @@
 import Vec3D from './Vec3D.js';
 
 export default class Triangle {
-  constructor(vertexIndexes, material, lightAmount) {
+  constructor(vertexIndexes, textureIndexes, material, lightAmount) {
     this.vertexIndexes = vertexIndexes;
+    this.textureIndexes = textureIndexes;
+
     this.v0 = vertexIndexes[0];
     this.v1 = vertexIndexes[1];
     this.v2 = vertexIndexes[2];
+
+    this.t0 = textureIndexes[0];
+    this.t1 = textureIndexes[1];
+    this.t2 = textureIndexes[2];
+
     this.material = material;
     this.lightAmount = lightAmount;
   }

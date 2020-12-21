@@ -6,6 +6,15 @@ import Material from './Material.js';
 const COLOR = [150, 150, 0];
 const MATERIAL = new Material('mesh', COLOR);
 
+function arrayBufferToBase64(buffer) {
+  var binary = '';
+  var bytes = [].slice.call(new Uint8Array(buffer));
+
+  bytes.forEach((b) => binary += String.fromCharCode(b));
+
+  return window.btoa(binary);
+}
+
 export default class Mesh {
   constructor({debug}) {
     this.model = null;
@@ -148,6 +157,15 @@ export default class Mesh {
           material.illum = parseInt(parts[1], 10);
           break;
         }
+        case 'map_Kd': {
+          // map_Kd -options args filename
+
+          // Specifies that a color texture file or color procedural texture file is
+          // linked to the diffuse reflectivity of the material.  During rendering,
+          // the map_Kd value is multiplied by the Kd value.
+          material.map_kd = parts[1];
+          break;
+        }
         }
       });
 
@@ -156,6 +174,36 @@ export default class Mesh {
       }
 
       return materials;
+    }).then(materials => {
+      let texturePromises = [];
+
+      materials.forEach((m, k) => {
+        if (m.map_kd) {
+          let url = `${this.baseUrl}/${m.map_kd}`;
+          let promise = fetch(url).then(response => {
+            // https://medium.com/front-end-weekly/fetching-images-with-the-fetch-api-fb8761ed27b2
+            return response.arrayBuffer().then(buffer => {
+              var base64Flag = 'data:image/jpeg;base64,';
+              var imageStr = arrayBufferToBase64(buffer);
+              let img = document.createElement('img');
+              img.src = base64Flag + imageStr;
+              return img;
+            });
+          }).then(img => {
+            m.textureData = img;
+            return m;
+          });
+          texturePromises.push(promise);
+        }
+      });
+
+      if (texturePromises) {
+        return Promise.all(texturePromises).then(result => {
+          return materials;
+        });
+      } else {
+        return materials;
+      }
     });
   }
 
@@ -175,6 +223,7 @@ export default class Mesh {
       return response.text();
     }).then((lines) => {
       let vertexes = [];
+      let textureVertexes = [];
       let triangles = [];
 
       let materialName = null;
@@ -194,6 +243,13 @@ export default class Mesh {
             vertexes.push(vec);
             break;
           }
+          case 'vt': {
+            let vec = new Vec3D(
+              parseFloat(parts[1]),
+              parseFloat(parts[2]));
+            textureVertexes.push(vec);
+            break;
+          }
           case 'usemtl': {
             materialName = parts[1];
             break;
@@ -209,6 +265,11 @@ export default class Mesh {
                 parseInt(yp[0], 10) - 1,
                 parseInt(zp[0], 10) - 1,
               ],
+              [
+                parseInt(xp[1], 10) - 1,
+                parseInt(yp[1], 10) - 1,
+                parseInt(zp[1], 10) - 1,
+              ],
               this.material,
               1);
             triangle.materialName = materialName;
@@ -219,6 +280,7 @@ export default class Mesh {
       });
 
       this.vertexes = vertexes;
+      this.textureVertexes = textureVertexes;
       this.triangles = triangles;
 
       if (this.debug) {

@@ -13,6 +13,7 @@ export default class Material {
     this.ni = null;
     this.d = null;
     this.illum = null;
+    this.map_kd = null;
   }
 
   getColor(lightAmount) {
@@ -34,5 +35,9 @@ export default class Material {
       ${shaded[0]},
       ${shaded[1]},
       ${shaded[2]})`;
+  }
+
+  getTexture(lightAmount) {
+    return this.textureData;
   }
 }

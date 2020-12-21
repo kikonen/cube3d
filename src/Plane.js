@@ -24,7 +24,7 @@ export default class Plane {
    * https://www.cubic.org/docs/3dclip.htm
    * https://stackoverflow.com/questions/5666222/3d-line-plane-intersection
    */
-  clip(tri, vertexes) {
+  clip(tri, vertexes, textures) {
     let inside = [];
     let outside = [];
 
@@ -48,6 +48,10 @@ export default class Plane {
         let material = tri.material;
         let lightAmount = tri.lightAmount;
 
+        let t0 = tri.t0;
+        let t1 = tri.t1;
+        let t2 = tri.t2;
+
         let v0 = inside[0];
         let p0 = vertexes[v0];
 
@@ -65,13 +69,17 @@ export default class Plane {
         if (this.debug) {
           material = new Material('clip_one', [0, 0, 140]);
         }
-        let tri1 = new Triangle([v0, v1, v2], material, lightAmount);
+        let tri1 = new Triangle([v0, v1, v2], [t0, t1, t2], material, lightAmount);
 
         return [tri1];
       } else {
         // 2 inside
         let material = tri.material;
         let lightAmount = tri.lightAmount;
+
+        let t0 = tri.t0;
+        let t1 = tri.t1;
+        let t2 = tri.t2;
 
         let v0 = inside[0];
         let v1 = inside[1];
@@ -87,7 +95,7 @@ export default class Plane {
         if (this.debug) {
           material = new Material('clip_two_1', [0, 140, 0]);
         }
-        let tri1 = new Triangle([v0, v1, v2], material, lightAmount);
+        let tri1 = new Triangle([v0, v1, v2], [t0, t1, t2], material, lightAmount);
 
         // The second triangle is composed of one of he inside points, a
         // new point determined by the intersection of the other side of the
@@ -106,7 +114,7 @@ export default class Plane {
         if (this.debug) {
           material = new Material('clip_two_2', [140, 0, 0]);
         }
-        let tri2 = new Triangle([v0, v1, v2], material, lightAmount);
+        let tri2 = new Triangle([v0, v1, v2], [t0, t1, t2], material, lightAmount);
 
         return [tri1, tri2];
       }
