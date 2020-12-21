@@ -23,6 +23,7 @@ export default class Engine {
 
     this.objects = [];
 
+    this.optimize = true;
     this.rotate = false;
     this.debug = false;
     this.ticks = 0;
@@ -112,6 +113,17 @@ export default class Engine {
     camera.updateMesh(this.cameraMesh);
 
     let ctx = this.ctx2D;
+
+    if (this.optimize) {
+      // https://stackoverflow.com/questions/195262/can-i-turn-off-antialiasing-on-an-html-canvas-element
+      // https://html.spec.whatwg.org/multipage/canvas.html#fill-and-stroke-styles:dom-context-2d-imagesmoothingenabled
+      // CLAIM: can be faster; didn't notice any difference
+      ctx.imageSmoothingEnabled = false;
+
+      // https://html.spec.whatwg.org/multipage/canvas.html#2dcontext:concept-canvas-desynchronized
+      // CLAIM: may be faster
+      ctx.desynchronized = true;
+    }
 
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, screenW, screenH);
@@ -315,9 +327,17 @@ export default class Engine {
           let p1 = projectedVertexes[tri.v1];
           let p2 = projectedVertexes[tri.v2];
 
-          ctx.moveTo(p0.x, p0.y);
-          ctx.lineTo(p1.x, p1.y);
-          ctx.lineTo(p2.x, p2.y);
+          // https://stackoverflow.com/questions/8205828/html5-canvas-performance-and-optimization-tips-tricks-and-coding-best-practices
+          // CLAIM: rounded numbers are *faster* in canvas
+          if (this.optimize) {
+            ctx.moveTo(p0.x << 0, p0.y << 0);
+            ctx.lineTo(p1.x << 0, p1.y << 0);
+            ctx.lineTo(p2.x << 0, p2.y << 0);
+          } else {
+            ctx.moveTo(p0.x, p0.y);
+            ctx.lineTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+          }
         }
 
         if (this.fill) {

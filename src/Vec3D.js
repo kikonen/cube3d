@@ -67,6 +67,15 @@ export default class Vec3D {
     return new Vec3D(-this.x, -this.y, -this.z, this.w);
   }
 
+  round() {
+    // https://stackoverflow.com/questions/8205828/html5-canvas-performance-and-optimization-tips-tricks-and-coding-best-practices
+    // CLAIM: "<< 0" is *faster* than Math.round
+    this.x = this.x << 0;
+    this.y = this.y << 0;
+    this.z = this.z << 0;
+    return this;
+  }
+
   reset(x, y, z, w) {
     this.x = x;
     this.y = y;

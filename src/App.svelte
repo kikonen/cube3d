@@ -82,6 +82,7 @@
   let fill = true;
   let wireframe = false;
   let rotate = false;
+  let optimize = false;
 
   let fps = 0;
   let frames = 0;
@@ -109,6 +110,7 @@
     engine.debug = debug;
     engine.fill = fill;
     engine.wireframe = wireframe;
+    engine.optimize = optimize;
 
     if (model.camera) {
       engine.camera = model.camera;
@@ -170,9 +172,6 @@
       engine.fill = fill;
       engine.resetFrames();
     }
-    if (fill) {
-      console.clear();
-    }
   }
 
   function toggleWireframe() {
@@ -180,9 +179,6 @@
     if (engine) {
       engine.wireframe = wireframe;
       engine.resetFrames();
-    }
-    if (wireframe) {
-      console.clear();
     }
   }
 
@@ -201,6 +197,15 @@
     rotate = !rotate;
     if (engine) {
       engine.rotate = rotate;
+      engine.resetFrames();
+    }
+  }
+
+  function toggleOptimize() {
+    optimize = !optimize;
+    if (engine) {
+      engine.optimize = optimize;
+      engine.resetFrames();
     }
   }
 
@@ -238,6 +243,7 @@
     <button on:click={toggleFill}>{fill ? 'Fill: On' : 'Fill: Off'}</button>
     <button on:click={toggleWireframe}>{wireframe ? 'Wireframe: On' : 'Wireframe: Off'}</button>
     <button on:click={toggleRotate}>{rotate ? 'Rotate: On' : 'Rotate: Off'}</button>
+    <button on:click={toggleOptimize}>{optimize ? 'Optimize: On' : 'Optimize: Off'}</button>
     <button on:click={toggleDebug}>{debug ? 'Debug: On' : 'Debug: Off'}</button>
 
     <span>
