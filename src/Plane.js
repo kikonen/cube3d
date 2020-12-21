@@ -8,9 +8,6 @@ export default class Plane {
     this.normal = normal.normalize();
     this.d = this.normal.dot(this.point);
     this.debug = debug;
-
-    this.inside = [];
-    this.outside = [];
   }
 
   intersectLine(lineStart, lineEnd) {
@@ -28,11 +25,8 @@ export default class Plane {
    * https://stackoverflow.com/questions/5666222/3d-line-plane-intersection
    */
   clip(tri, vertexes) {
-    let inside = this.inside;
-    let outside = this.outside;
-
-    inside.length = 0;
-    outside.length = 0;
+    let inside = [];
+    let outside = [];
 
     tri.vertexIndexes.forEach(vi => {
       let p = vertexes[vi];
