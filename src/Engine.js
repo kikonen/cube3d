@@ -97,7 +97,7 @@ export default class Engine {
       return;
     }
 
-    let startTs = new Date().getTime();
+    let startTs = performance.now();
 
     let canvas = this.canvasEl;
 
@@ -155,10 +155,10 @@ export default class Engine {
     }
 
     this.frames += 1;
-    let diff = new Date().getTime() - startTs;
+    let diff = performance.now() - startTs;
 
     if (this.debug) {
-      console.log(`skip=${skippedTris}, dup=${duplicateVertixes} ms=${diff}`);
+      console.log(`skip=${skippedTris}, dup=${duplicateVertixes} ms=${diff.toFixed(2)}`);
     }
 
     requestAnimationFrame(this.render);

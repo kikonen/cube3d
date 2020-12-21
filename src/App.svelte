@@ -41,7 +41,7 @@
     },
     {
       name: 'pumpkin',
-      pos: new Vec3D(0, 0, 2),
+      pos: new Vec3D(0, 0, 75),
       scale: 1,
     },
     {
