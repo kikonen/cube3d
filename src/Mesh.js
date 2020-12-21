@@ -9,6 +9,7 @@ const MATERIAL = new Material('mesh', COLOR);
 export default class Mesh {
   constructor({debug}) {
     this.model = null;
+    this.vertexes = [];
     this.triangles = [];
 
     this.pos = new Vec3D();
@@ -131,6 +132,9 @@ export default class Mesh {
     });
   }
 
+  /**
+   * http://paulbourke.net/dataformats/obj/
+   */
   loadObject(model) {
     this.model = model;
     this.material = model.material || this.material;
@@ -143,7 +147,7 @@ export default class Mesh {
     return fetch(url).then((response) => {
       return response.text();
     }).then((lines) => {
-      let vectors = [];
+      let vertexes = [];
       let triangles = [];
 
       let materialName = null;
@@ -160,7 +164,7 @@ export default class Mesh {
               parseFloat(parts[1]),
               parseFloat(parts[2]),
               parseFloat(parts[3]));
-            vectors.push(vec);
+            vertexes.push(vec);
             break;
           }
           case 'usemtl': {
@@ -168,15 +172,15 @@ export default class Mesh {
             break;
           }
           case 'f': {
-            let x = vectors[parseInt(parts[1].split('/')[0], 10) - 1];
-            let y = vectors[parseInt(parts[2].split('/')[0], 10) - 1];
-            let z = vectors[parseInt(parts[3].split('/')[0], 10) - 1];
+            let xp = parts[1].split('/');
+            let yp = parts[2].split('/');
+            let zp = parts[3].split('/');
 
             let triangle = new Triangle(
               [
-                x,
-                y,
-                z
+                parseInt(xp[0], 10) - 1,
+                parseInt(yp[0], 10) - 1,
+                parseInt(zp[0], 10) - 1,
               ],
               this.material,
               1);
@@ -187,6 +191,7 @@ export default class Mesh {
         }
       });
 
+      this.vertexes = vertexes;
       this.triangles = triangles;
 
       if (this.debug) {

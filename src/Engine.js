@@ -98,7 +98,6 @@ export default class Engine {
     }
 
     let startTs = new Date().getTime();
-    let skipped = 0;
 
     let canvas = this.canvasEl;
 
@@ -122,6 +121,9 @@ export default class Engine {
 
     let up = new Vec3D(0, -1, 0);
 
+    let skippedTris = 0;
+    let duplicateVertixes = 0;
+
     {
       let target = camera.pos.plus(camera.dir);
       let worldCameraTranslate = Matrix4x4.pointAtMatrix(camera.pos, target, up);
@@ -131,7 +133,9 @@ export default class Engine {
       let viewPort = new Viewport(0 + pad, 0 + pad, screenW - 2 * pad, screenH - 2 * pad, this.debug);
 
       for (let mesh of this.objects) {
-        skipped += this.renderMesh(mesh, ctx, viewPort, worldViewTranslate, camera.viewPos, camera.lightDir);
+        let res = this.renderMesh(mesh, ctx, viewPort, worldViewTranslate, camera.viewPos, camera.lightDir);
+        skippedTris += res.skippedTris;
+        duplicateVertixes += res.duplicateVertixes;
       }
     }
 
@@ -145,21 +149,24 @@ export default class Engine {
       let camPort = new Viewport(3, 3, 100, 100, this.debug);
       camPort.offset = new Vec3D(0.5, 1.3);
 
-      skipped += this.renderMesh(this.cameraMesh, ctx, camPort, cpView, viewPos, new Vec3D(0, -1, -1));
+      let res = this.renderMesh(this.cameraMesh, ctx, camPort, cpView, viewPos, new Vec3D(0, -1, -1));
+//      skippedTris += res.skippedTris;
+//      duplicateVertixes += res.duplicateVertixes;
     }
 
     this.frames += 1;
     let diff = new Date().getTime() - startTs;
 
     if (this.debug) {
-      console.log(`skip=${skipped}, ms=${diff}`);
+      console.log(`skip=${skippedTris}, dup=${duplicateVertixes} ms=${diff}`);
     }
 
     requestAnimationFrame(this.render);
   }
 
   renderMesh(mesh, ctx, viewPort, viewTranslate, viewPos, lightDir) {
-    let skipped = 0;
+    let skippedTris = 0;
+    let duplicateVertixes = 0;
 
     ctx.lineWidth = 0.5;
     ctx.strokeColor = '#a0a0a0';
@@ -170,64 +177,106 @@ export default class Engine {
     ctx.lineWidth = 0.1;
     ctx.strokeColor = '#ffffff';
 
-    let projectedTris = [];
-
     // ORDER: yaw-pitch-roll
     let world = Matrix4x4.scaleMatrix(mesh.scale)
         .multiply(mesh.rotate)
         .multiply(Matrix4x4.translationMatrix(mesh.pos));
 
-    for (let triangle of mesh.triangles) {
-      let worldPoints = [];
+    let worldVertexes = mesh.vertexes.map(v => {
+      return world.multiplyVec(v);
+    });
 
-      for (let p of triangle.points) {
-        worldPoints.push(world.multiplyVec(p));
-      }
+    let viewVertexes = worldVertexes.map(v => { return null; });
+    let viewTris = [];
 
-      let line1 = worldPoints[1].minus(worldPoints[0]);
-      let line2 = worldPoints[2].minus(worldPoints[0]);
-      let normal = line1.cross(line2).normalize();
+    for (let tri of mesh.triangles) {
+      let v0 = tri.v0;
+      let v1 = tri.v1;
+      let v2 = tri.v2;
+      let p0 = worldVertexes[v0];
+      let p1 = worldVertexes[v1];
+      let p2 = worldVertexes[v2];
 
-      let viewRay = worldPoints[0].minus(viewPos);
+      let normal;
+      {
+        let line1 = p1.minus(p0);
+        let line2 = p2.minus(p0);
+        normal = line1.cross(line2).normalize();
 
-      let dot = normal.dot(viewRay);
-      if (dot > 0) {
-        skipped += 1;
-        continue;
+        let viewRay = p0.minus(viewPos);
+
+        let dot = normal.dot(viewRay);
+        if (dot > 0) {
+          skippedTris += 1;
+          continue;
+        }
       }
 
       let lightAmount = normal.dot(lightDir);
 
-      let viewPoints;
-      viewPoints = worldPoints.map(p => {
-        return viewTranslate.multiplyVec(p);
-      });
-
-      let viewTri = new Triangle(viewPoints, triangle.material, lightAmount);
-      let clippedTris = viewPort.nearPlane.clip(viewTri);
-
-      for (let tri of clippedTris) {
-        let projectedPoints = [];
-
-        for (let p of tri.points) {
-          let projected = viewPort.projection.multiplyVec(p);
-
-          if (projected.w != 0) {
-            projected = projected.divide(projected.w);
-          }
-
-          projected = projected.plus(viewPort.offset);
-
-          projected.x *= 0.5 * viewPort.w;
-          projected.y *= 0.5 * viewPort.h;
-
-          projectedPoints.push(projected);
-        }
-
-        let projectedTri = new Triangle(projectedPoints, tri.material, tri.lightAmount);
-        projectedTri.calculateZ();
-        projectedTris.push(projectedTri);
+      if (!viewVertexes[v0]) {
+        viewVertexes[v0] = viewTranslate.multiplyVec(p0);
+      } else {
+        duplicateVertixes++;
       }
+
+      if (!viewVertexes[v1]) {
+        viewVertexes[v1] = viewTranslate.multiplyVec(p1);
+      } else {
+        duplicateVertixes++;
+      }
+
+      if (!viewVertexes[v2]) {
+        viewVertexes[v2] = viewTranslate.multiplyVec(p2);
+      } else {
+        duplicateVertixes++;
+      }
+
+      let viewTri = new Triangle(tri.vertexIndexes, tri.material, lightAmount);
+      let clipped = viewPort.nearPlane.clip(viewTri, viewVertexes);
+      for (tri of clipped) {
+        viewTris.push(tri);
+      }
+    }
+
+    let projectedTris = [];
+
+    let projectedVertexes = viewVertexes.map(v => { return null; });
+    let projection = viewPort.projection;
+
+    function project(v) {
+      v = projection.multiplyVec(v);
+      if (v.w != 0) {
+        v = v.divide(v.w);
+      }
+      v = v.plus(viewPort.offset);
+      v.x *= 0.5 * viewPort.w;
+      v.y *= 0.5 * viewPort.h;
+      return v;
+    }
+
+    for (let tri of viewTris) {
+      let v0 = tri.v0;
+      let v1 = tri.v1;
+      let v2 = tri.v2;
+
+      let p0 = viewVertexes[v0];
+      let p1 = viewVertexes[v1];
+      let p2 = viewVertexes[v2];
+
+      if (!projectedVertexes[v0]) {
+        projectedVertexes[v0] = project(p0);
+      }
+      if (!projectedVertexes[v1]) {
+        projectedVertexes[v1] = project(p1);
+      }
+      if (!projectedVertexes[v2]) {
+        projectedVertexes[v2] = project(p2);
+      }
+
+      let projectedTri = new Triangle(tri.vertexIndexes, tri.material, tri.lightAmount);
+      projectedTri.calculateZ(projectedVertexes);
+      projectedTris.push(projectedTri);
     }
 
     projectedTris.sort((a, b) => {
@@ -240,35 +289,33 @@ export default class Engine {
       tris.push(tri);
 
       for (let s = 0; s < 4; s++) {
-        let processed = [];
+        let processedTris = [];
         while (tris.length > 0) {
           let curr = tris.pop();
 
           let plane = viewPort.planes[s];
-          let clippedTris = plane.clip(curr);
-          for (let i = 0; i < clippedTris.length; i++) {
-            processed.push(clippedTris[i]);
+          let clippedTris = plane.clip(curr, projectedVertexes);
+          for (let clippedTri of clippedTris) {
+            processedTris.push(clippedTri);
           }
         }
-        for (let i = 0; i < processed.length; i++) {
-          tris.push(processed[i]);
+        for (let processedTri of processedTris) {
+          tris.push(processedTri);
         }
       }
 
       // draw tris clipped to screen
       for (let tri of tris) {
-        ctx.beginPath();
-
         if (this.fill || this.wireframe) {
-          let points = tri.points;
-          for (let i = 0; i < points.length; i++) {
-            let p = points[i];
-            if (i == 0) {
-              ctx.moveTo(p.x, p.y);
-            } else {
-              ctx.lineTo(p.x, p.y);
-            }
-          }
+          ctx.beginPath();
+
+          let p0 = projectedVertexes[tri.v0];
+          let p1 = projectedVertexes[tri.v1];
+          let p2 = projectedVertexes[tri.v2];
+
+          ctx.moveTo(p0.x, p0.y);
+          ctx.lineTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
         }
 
         if (this.fill) {
@@ -283,6 +330,9 @@ export default class Engine {
       }
     }
 
-    return skipped;
+    return {
+      skippedTris: skippedTris,
+      duplicateVertixes: duplicateVertixes,
+    };
   }
 }

@@ -259,9 +259,9 @@
       </div>
       {#if camera}
         <div>
-          Cmera position: ({camera.pos.x.toFixed(1)}, {camera.pos.y.toFixed(1)}, {camera.pos.z.toFixed(1)})
+          Camera position: ({camera.pos.x.toFixed(1)}, {camera.pos.y.toFixed(1)}, {camera.pos.z.toFixed(1)})
           <br>
-          Cmera dir: ({camera.dir.x.toFixed(1)}, {camera.dir.y.toFixed(1)}, {camera.dir.z.toFixed(1)})
+          Camera dir: ({camera.dir.x.toFixed(1)}, {camera.dir.y.toFixed(1)}, {camera.dir.z.toFixed(1)})
           {#if camera.angleX}
             <br>
             Camera angle: ({camera.angleX.toFixed(1)}, {camera.angleY.toFixed(1)}, {camera.angleZ.toFixed(1)})
