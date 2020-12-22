@@ -315,7 +315,7 @@ export default class CanvasRenderer {
     let y2 = Math.round(max.y);
 
 
-    function plotLineLow(x0, y0, x1, y1) {
+    function plotLineLow(x0, y0, x1, y1, plot, side) {
       let dx = x1 - x0;
       let dy = y1 - y0;
       let yi = 1;
@@ -327,16 +327,23 @@ export default class CanvasRenderer {
       let y = y0;
 
       for (let x = x0; x < x1; x++) {
-        putPixel(x, y);
+        plot(x, y);
+
+        if (x === x0 || x == x1 - 1) {
+          side.push(Math.round(x));
+        }
+
         if (D > 0) {
           y = y + yi;
           D = D + (2 * (dy - dx));
+          side.push(Math.round(x));
         } else {
           D = D + 2 * dy;
         }
       }
     }
-    function plotLineHigh(x0, y0, x1, y1) {
+
+    function plotLineHigh(x0, y0, x1, y1, plot, side) {
       let dx = x1 - x0;
       let dy = y1 - y0;
       let xi = 1;
@@ -348,7 +355,8 @@ export default class CanvasRenderer {
       let x = x0;
 
       for (let y = y0; y < y1; y++) {
-        putPixel(x, y);
+        plot(x, y);
+        side.push(Math.round(x));
 
         if (D > 0) {
           x = x + xi;
@@ -359,18 +367,18 @@ export default class CanvasRenderer {
       }
     }
 
-    function plotLine(x0, y0, x1, y1) {
+    function plotLine(x0, y0, x1, y1, plot, side) {
       if (Math.abs(y1 - y0) < Math.abs(x1 - x0)) {
         if (x0 > x1) {
-          plotLineLow(x1, y1, x0, y0);
+          plotLineLow(x1, y1, x0, y0, plot, side);
         } else {
-          plotLineLow(x0, y0, x1, y1);
+          plotLineLow(x0, y0, x1, y1, plot, side);
         }
       } else {
         if (y0 > y1) {
-          plotLineHigh(x1, y1, x0, y0);
+          plotLineHigh(x1, y1, x0, y0, plot, side);
         } else {
-          plotLineHigh(x0, y0, x1, y1);
+          plotLineHigh(x0, y0, x1, y1, plot, side);
         }
       }
     }
@@ -383,17 +391,27 @@ export default class CanvasRenderer {
     if (this.debug) {
       ctx.fillStyle = '#FF0000';
     }
-    plotLine(min.x, min.y, mid.x, mid.y);
+    let side1 = [];
+    plotLine(min.x, min.y, mid.x, mid.y, putPixel, side1);
 
     if (this.debug) {
       ctx.fillStyle = '#0000FF';
     }
-    plotLine(min.x, min.y, max.x, max.y);
+    let side2 = [];
+    plotLine(min.x, min.y, max.x, max.y, putPixel, side2);
 
     if (this.debug) {
       ctx.fillStyle = '#00FF00';
     }
-    plotLine(mid.x, mid.y, max.x, max.y);
+    let side3 = [];
+    plotLine(mid.x, mid.y, max.x, max.y, putPixel, side3);
+
+    if (this.debug) {
+      console.log(p0, p1, p2);
+      console.log(side1);
+      console.log(side2);
+      console.log(side3);
+    }
   }
 
   /**
