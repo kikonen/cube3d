@@ -23,6 +23,10 @@ export default class Engine {
 
     this.objects = [];
 
+    this.fill = true;
+    this.wireframe = false;
+    this.texture = true;
+
     this.optimize = true;
     this.rotate = false;
     this.debug = false;
@@ -110,6 +114,7 @@ export default class Engine {
       objects: this.objects,
       fill: this.fill,
       wireframe: this.wireframe,
+      texture: this.texture,
       optimize: this.optimize,
       debug: this.debug});
 

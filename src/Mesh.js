@@ -19,6 +19,7 @@ export default class Mesh {
   constructor({debug}) {
     this.model = null;
     this.vertexes = [];
+    this.textureVertexes = [];
     this.triangles = [];
 
     this.pos = new Vec3D();
@@ -259,17 +260,22 @@ export default class Mesh {
             let yp = parts[2].split('/');
             let zp = parts[3].split('/');
 
+            let textureIndexes = null;
+            if (xp[1]) {
+              textureIndexes = [
+                parseInt(xp[1], 10) - 1,
+                parseInt(yp[1], 10) - 1,
+                parseInt(zp[1], 10) - 1,
+              ];
+            }
+
             let triangle = new Triangle(
               [
                 parseInt(xp[0], 10) - 1,
                 parseInt(yp[0], 10) - 1,
                 parseInt(zp[0], 10) - 1,
               ],
-              [
-                parseInt(xp[1], 10) - 1,
-                parseInt(yp[1], 10) - 1,
-                parseInt(zp[1], 10) - 1,
-              ],
+              textureIndexes,
               this.material,
               1);
             triangle.materialName = materialName;
@@ -280,6 +286,10 @@ export default class Mesh {
       });
 
       this.vertexes = vertexes;
+
+      if (!textureVertexes.length) {
+        textureVertexes.push(new Vec3D());
+      }
       this.textureVertexes = textureVertexes;
       this.triangles = triangles;
 

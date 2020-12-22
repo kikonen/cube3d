@@ -17,14 +17,18 @@ export default class Material {
   }
 
   getColor(lightAmount) {
-    let kd = this.kd;
     let color = null;
-    if (kd) {
-      color = [Math.round(kd[0] * 255), Math.round(kd[1] * 255), Math.round(kd[2] * 255)];
-    }
-
-    if (!color) {
+    if (this.textureData) {
       color = this.color || COLOR;
+    } else {
+      let kd = this.kd;
+      if (kd) {
+        color = [Math.round(kd[0] * 255), Math.round(kd[1] * 255), Math.round(kd[2] * 255)];
+      }
+
+      if (!color) {
+        color = this.color || COLOR;
+      }
     }
 
     let shaded = color.map(c => {

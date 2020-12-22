@@ -20,10 +20,11 @@ export default class CanvasRenderer {
     this.ctx2D = canvas.getContext("2d", { alpha: false });
   }
 
-  render({camera, objects, optimize, fill, wireframe, debug}) {
+  render({camera, objects, optimize, fill, wireframe, texture, debug}) {
     this.optimize = optimize;
     this.fill = fill;
     this.wireframe = wireframe;
+    this.texture = texture;
     this.optimize = optimize;
     this.debug = debug;
 
@@ -119,6 +120,8 @@ export default class CanvasRenderer {
     let viewVertexes = worldVertexes.map(v => { return null; });
     let viewTris = [];
 
+    let textureVertexes = mesh.textureVertexes.map(v => { return v; });
+
     for (let tri of mesh.triangles) {
       let v0 = tri.v0;
       let v1 = tri.v1;
@@ -163,7 +166,7 @@ export default class CanvasRenderer {
       }
 
       let viewTri = new Triangle(tri.vertexIndexes, tri.textureIndexes, tri.material, lightAmount);
-      let clipped = viewPort.nearPlane.clip(viewTri, viewVertexes);
+      let clipped = viewPort.nearPlane.clip(viewTri, viewVertexes, textureVertexes);
       for (tri of clipped) {
         viewTris.push(tri);
       }
@@ -224,7 +227,7 @@ export default class CanvasRenderer {
           let curr = tris.pop();
 
           let plane = viewPort.planes[s];
-          let clippedTris = plane.clip(curr, projectedVertexes);
+          let clippedTris = plane.clip(curr, projectedVertexes, textureVertexes);
           for (let clippedTri of clippedTris) {
             processedTris.push(clippedTri);
           }
@@ -257,7 +260,7 @@ export default class CanvasRenderer {
         }
 
         if (this.fill) {
-          let texture = tri.material.getTexture(tri.lightAmount);
+          let texture = this.texture ? tri.material.getTexture(tri.lightAmount) : null;
           if (texture) {
             ctx.fillStyle = ctx.createPattern(texture, "repeat");
           } else {

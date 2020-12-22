@@ -86,6 +86,7 @@
   let debug = false;
   let fill = true;
   let wireframe = false;
+  let texture = true;
   let rotate = false;
   let optimize = false;
 
@@ -115,6 +116,7 @@
     engine.debug = debug;
     engine.fill = fill;
     engine.wireframe = wireframe;
+    engine.texture = texture;
     engine.optimize = optimize;
 
     if (model.camera) {
@@ -187,6 +189,14 @@
     }
   }
 
+  function toggleTexture() {
+    texture = !texture;
+    if (engine) {
+      engine.texture = texture;
+      engine.resetFrames();
+    }
+  }
+
   function toggleDebug() {
     debug = !debug;
     if (engine) {
@@ -247,6 +257,7 @@
     <button on:click={toggleGame}>{started ? 'Stop' : 'Start'}</button>
     <button on:click={toggleFill}>{fill ? 'Fill: On' : 'Fill: Off'}</button>
     <button on:click={toggleWireframe}>{wireframe ? 'Wireframe: On' : 'Wireframe: Off'}</button>
+    <button on:click={toggleTexture}>{texture ? 'Texture: On' : 'Texture: Off'}</button>
     <button on:click={toggleRotate}>{rotate ? 'Rotate: On' : 'Rotate: Off'}</button>
     <button on:click={toggleOptimize}>{optimize ? 'Optimize: On' : 'Optimize: Off'}</button>
     <button on:click={toggleDebug}>{debug ? 'Debug: On' : 'Debug: Off'}</button>
