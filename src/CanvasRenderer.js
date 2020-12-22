@@ -290,8 +290,118 @@ export default class CanvasRenderer {
 
   /**
    * Extremely slow texture render; just pure exercise
+   *
+   * https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
    */
   renderTexture(ctx, p0, p1, p2, tp0, tp1, tp2, texture, tri) {
+    function putPixel(x, y, color) {
+      if (x < 0 || x > 800 || y < 0 || y > 800) {
+        throw `KO: ${x}, ${y}`;
+      }
+      ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
+    }
+
+    let axis = [p0, p1, p2].sort((a, b) => { return a.y - b.y; });
+
+    let w = texture.width;
+    let h = texture.height;
+
+    let min = axis[0];
+    let mid = axis[1];
+    let max = axis[2];
+
+    let y0 = Math.round(min.y);
+    let y1 = Math.round(mid.y);
+    let y2 = Math.round(max.y);
+
+
+    function plotLineLow(x0, y0, x1, y1) {
+      let dx = x1 - x0;
+      let dy = y1 - y0;
+      let yi = 1;
+      if (dy < 0) {
+        yi = -1;
+        dy = -dy;
+      }
+      let D = (2 * dy) - dx;
+      let y = y0;
+
+      for (let x = x0; x < x1; x++) {
+        putPixel(x, y);
+        if (D > 0) {
+          y = y + yi;
+          D = D + (2 * (dy - dx));
+        } else {
+          D = D + 2 * dy;
+        }
+      }
+    }
+    function plotLineHigh(x0, y0, x1, y1) {
+      let dx = x1 - x0;
+      let dy = y1 - y0;
+      let xi = 1;
+      if (dx < 0) {
+        xi = -1;
+        dx = -dx;
+      }
+      let D = (2 * dx) - dy;
+      let x = x0;
+
+      for (let y = y0; y < y1; y++) {
+        putPixel(x, y);
+
+        if (D > 0) {
+          x = x + xi;
+          D = D + (2 * (dx - dy));
+        } else {
+          D = D + 2 * dx;
+        }
+      }
+    }
+
+    function plotLine(x0, y0, x1, y1) {
+      if (Math.abs(y1 - y0) < Math.abs(x1 - x0)) {
+        if (x0 > x1) {
+          plotLineLow(x1, y1, x0, y0);
+        } else {
+          plotLineLow(x0, y0, x1, y1);
+        }
+      } else {
+        if (y0 > y1) {
+          plotLineHigh(x1, y1, x0, y0);
+        } else {
+          plotLineHigh(x0, y0, x1, y1);
+        }
+      }
+    }
+
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.fillStyle = tri.material.getColor(tri.lightAmount);
+
+    if (this.debug) {
+      ctx.fillStyle = '#FF0000';
+    }
+    plotLine(min.x, min.y, mid.x, mid.y);
+
+    if (this.debug) {
+      ctx.fillStyle = '#0000FF';
+    }
+    plotLine(min.x, min.y, max.x, max.y);
+
+    if (this.debug) {
+      ctx.fillStyle = '#00FF00';
+    }
+    plotLine(mid.x, mid.y, max.x, max.y);
+  }
+
+  /**
+   * Extremely slow texture render; just pure exercise
+   *
+   * https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+   */
+  renderTexture_NOPE(ctx, p0, p1, p2, tp0, tp1, tp2, texture, tri) {
     function putPixel(x, y, color) {
       if (x < 0 || x > 800 || y < 0 || y > 800) {
         throw `KO: ${x}, ${y}`;
@@ -390,4 +500,5 @@ export default class CanvasRenderer {
       }
     }
   }
+
 }
