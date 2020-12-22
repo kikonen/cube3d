@@ -239,12 +239,12 @@ export default class CanvasRenderer {
 
       // draw tris clipped to screen
       for (let tri of tris) {
+        let p0 = projectedVertexes[tri.v0];
+        let p1 = projectedVertexes[tri.v1];
+        let p2 = projectedVertexes[tri.v2];
+
         if (this.fill || this.wireframe) {
           ctx.beginPath();
-
-          let p0 = projectedVertexes[tri.v0];
-          let p1 = projectedVertexes[tri.v1];
-          let p2 = projectedVertexes[tri.v2];
 
           // https://stackoverflow.com/questions/8205828/html5-canvas-performance-and-optimization-tips-tricks-and-coding-best-practices
           // CLAIM: rounded numbers are *faster* in canvas
@@ -262,11 +262,15 @@ export default class CanvasRenderer {
         if (this.fill) {
           let texture = this.texture ? tri.material.getTexture(tri.lightAmount) : null;
           if (texture) {
-            ctx.fillStyle = ctx.createPattern(texture, "repeat");
+            let tp0 = textureVertexes[tri.t0];
+            let tp1 = textureVertexes[tri.t1];
+            let tp2 = textureVertexes[tri.t2];
+
+            this.renderTexture(ctx, p0, p1, p2, tp0, tp1, tp2, texture, tri);
           } else {
             ctx.fillStyle = tri.material.getColor(tri.lightAmount);
+            ctx.fill();
           }
-          ctx.fill();
         }
 
         if (this.wireframe) {
@@ -282,5 +286,108 @@ export default class CanvasRenderer {
       skippedTris: skippedTris,
       duplicateVertexes: duplicateVertexes,
     };
+  }
+
+  /**
+   * Extremely slow texture render; just pure exercise
+   */
+  renderTexture(ctx, p0, p1, p2, tp0, tp1, tp2, texture, tri) {
+    function putPixel(x, y, color) {
+      if (x < 0 || x > 800 || y < 0 || y > 800) {
+        throw `KO: ${x}, ${y}`;
+      }
+      ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
+    }
+
+    let axis = [p0, p1, p2].sort((a, b) => { return a.y - b.y; });
+
+    let w = texture.width;
+    let h = texture.height;
+
+    let min = axis[0];
+    let mid = axis[1];
+    let max = axis[2];
+
+    let y0 = Math.round(min.y);
+    let y1 = Math.round(mid.y);
+    let y2 = Math.round(max.y);
+
+    let dxa = 0;
+    let dxb = 0;
+
+    if (y1 !== y0) {
+      dxa = (mid.x - min.x) / (mid.y - min.y);
+    }
+    if (y2 !== y1) {
+      dxb = (max.x - min.x) / (max.y - min.y);
+    }
+
+//    ctx.fillStyle = "#FF0000";
+//    ctx.fill();
+
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.fillStyle = tri.material.getColor(tri.lightAmount);
+
+    if (mid.x >= min.x) {
+      let t = dxa;
+      dxa = dxb;
+      dxb = t;
+    }
+
+    if (this.debug) {
+      ctx.fillStyle = "#00FF00";
+    }
+
+    for (let y = y0; y < y1; y++) {
+      let dy = y - y0;
+      let startX = min.x + dxa * dy;
+      let endX = min.x + dxb * dy;
+
+      if (startX < 0 || endX < 0) {
+        continue;
+      }
+
+      for (let x = startX; x < endX; x++) {
+        putPixel(x, y);
+      }
+    }
+
+    let startBaseX;
+    let endBaseX;
+    let startBaseY;
+    let endBaseY;
+
+    if (mid.x > max.x) {
+      dxb = (max.x - mid.x) / (max.y - mid.y);
+      startBaseX  = min.x;
+      endBaseX = mid.x;
+      startBaseY = y0;
+      endBaseY = y1;
+    } else {
+      dxa = (max.x - mid.x) / (max.y - mid.y);
+      startBaseX  = mid.x;
+      endBaseX = min.x;
+      startBaseY = y1;
+      endBaseY = y0;
+    }
+
+    if (this.debug) {
+      ctx.fillStyle = "#0000FF";
+    }
+
+    for (let y = y1; y < y2; y++) {
+      let startX = startBaseX + dxa * (y - startBaseY);
+      let endX = endBaseX + dxb * (y - endBaseY);
+
+      if (startX < 0 || endX < 0) {
+        continue;
+      }
+
+      for (let x = startX; x < endX; x++) {
+        putPixel(x, y);
+      }
+    }
   }
 }
