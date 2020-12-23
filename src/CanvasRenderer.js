@@ -298,12 +298,13 @@ export default class CanvasRenderer {
    * https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
    */
   renderTexture(ctx, viewPort, p0, p1, p2, tp0, tp1, tp2, texture, tri) {
-    let pixelData;// = new ImageData(new Uint8ClampedArray(4), 1, 1);
+    let pixelData = new ImageData(new Uint8ClampedArray(4), 1, 1);
 
     function putPixel(x, y, color) {
       if (x < 0 || x > 800 || y < 0 || y > 800) {
         throw `KO: ${x}, ${y}`;
       }
+      // https://stackoverflow.com/questions/3952856/why-is-putimagedata-so-slow
       if (false) {
         let data = pixelData.data;
         data[0] = color[0];
