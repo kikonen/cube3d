@@ -35,12 +35,15 @@ export default class Texture {
   /**
    * @return RGBA
    */
-  getRGBA(tx, ty) {
-    tx = Math.round(tx);
-    ty = Math.round(ty);
+  getRGBA(u, v) {
+    let sw = this.w; //200;
+    let sh = this.h; //200;
+
+    let x = Math.round(sw * u);
+    let y = Math.round(sh * v);
 
     let data = this.getImageData().data;
-    let base = (this.w * 4) * ty + tx * 4;
+    let base = (this.w * 4) * y + x * 4;
 
     let r = data[base];
     let g = data[base + 1];
@@ -53,15 +56,18 @@ export default class Texture {
   /**
    * @return RGBA
    */
-  getColor(tx, ty) {
-    tx = Math.round(tx);
-    ty = Math.round(ty);
+  getColor(u, v) {
+    let sw = this.w; //200;
+    let sh = this.h; //200;
 
-    let idx = this.w * ty + tx;
+    let x = Math.round(sw * u);
+    let y = Math.round(sh * v);
+
+    let idx = this.w * y + x;
     let color = this.colors[idx];
     if (!color) {
       let data = this.getImageData().data;
-      let base = (this.w * 4) * ty + tx * 4;
+      let base = (this.w * 4) * y + x * 4;
 
       color = [
         data[base],

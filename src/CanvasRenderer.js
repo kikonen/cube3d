@@ -13,6 +13,8 @@ const TICK_SPEED = 20;
 // timescale ~ 0.2
 const WORLD_SPEED = 80;
 
+const abs = Math.abs;
+
 
 export default class CanvasRenderer {
   constructor({canvas}) {
@@ -84,8 +86,8 @@ export default class CanvasRenderer {
       camPort.offset = new Vec3D(0.5, 1.3);
 
       let res = this.renderMesh(camera.mesh, ctx, camPort, cpView, viewPos, new Vec3D(0, -1, -1));
-//      skippedTris += res.skippedTris;
-//      duplicateVertexes += res.duplicateVertexes;
+      //      skippedTris += res.skippedTris;
+      //      duplicateVertexes += res.duplicateVertexes;
     }
 
     return {
@@ -357,6 +359,18 @@ export default class CanvasRenderer {
     let x1 = Math.round(mid[0].x);
     let x2 = Math.round(max[0].x);
 
+    let v0 = min[1].y;
+    let v1 = mid[1].y;
+    let v2 = max[1].y;
+
+    let u0 = min[1].x;
+    let u1 = mid[1].x;
+    let u2 = max[1].x;
+
+    let w0 = min[1].w;
+    let w1 = mid[1].w;
+    let w2 = max[1].w;
+
     if (this.debug) {
       ctx.closePath();
       ctx.stroke();
@@ -381,41 +395,95 @@ export default class CanvasRenderer {
     let dy1 = y1 - y0;
     let dx1 = x1 - x0;
 
+    let dv1 = v1 - v0;
+    let du1 = u1 - u0;
+    let dw1 = w1 - w0;
+
     let dy2 = y2 - y0;
     let dx2 = x2 - x0;
+
+    let dv2 = v2 - v0;
+    let du2 = u2 - u0;
+    let dw2 = w2 - w0;
+
+    let tex_u = 0;
+    let tex_v = 0;
+    let tex_w = 0;
 
     let dax_step = 0;
     let dbx_step = 0;
 
+    let du1_step = 0;
+    let dv1_step = 0;
+    let du2_step = 0;
+    let dv2_step = 0;
+    let dw1_step = 0;
+    let dw2_step = 0;
+
     // PART: top
     if (dy1 !== 0) {
-      dax_step = dx1 / dy1;
+      dax_step = dx1 / abs(dy1);
+
+      du1_step = du1 / abs(dy1);
+      dv1_step = dv1 / abs(dy1);
+      dw1_step = dw1 / abs(dy1);
     }
+
     if (dy2 !== 0) {
-      dbx_step = dx2 / dy2;
+      dbx_step = dx2 / abs(dy2);
+
+      du2_step = du2 / abs(dy2);
+      dv2_step = dv2 / abs(dy2);
+      dw2_step = dw2 / abs(dy2);
     }
 
     if (dy1 !== 0) {
-      let tx = 0;
-      let ty = 0;
-
       for (let y = y0; y < y1; y++) {
-        let yd = y - y0;
-        let ax = Math.round(x0 + dax_step * (y - y0));
-        let bx = Math.round(x0 + dbx_step * (y - y0));
+        let ax = Math.round(x0 + (y - y0) * dax_step);
+        let bx = Math.round(x0 + (y - y0) * dbx_step);
+
+        let tex_su = u0 + (y - y0) * du1_step;
+        let tex_sv = v0 + (y - y0) * dv1_step;
+        let tex_sw = w0 + (y - y0) * dw1_step;
+
+        let tex_eu = u0 + (y - y0) * du2_step;
+        let tex_ev = v0 + (y - y0) * dv2_step;
+        let tex_ew = w0 + (y - y0) * dw2_step;
 
         if (ax > bx) {
           let t = ax;
           ax = bx;
           bx = t;
+
+          t = tex_eu;
+          tex_eu = tex_su;
+          tex_su = t;
+
+          t = tex_ev;
+          tex_ev = tex_sv;
+          tex_sv = t;
+
+          t = tex_ew;
+          tex_ew = tex_sw;
+          tex_sw = t;
         }
 
+        tex_u = tex_su;
+        tex_v = tex_sv;
+        tex_w = tex_sw;
+
+        let tstep = 1.0 / (bx - ax);
+        let t = 0.0;
+
         for (let x = ax; x < bx; x++) {
-          let color = getColor(tx, ty, tri.lightAmount);
+          tex_u = (1.0 - t) * tex_su + t * tex_eu;
+          tex_v = (1.0 - t) * tex_sv + t * tex_ev;
+          tex_w = (1.0 - t) * tex_sw + t * tex_ew;
+
+          let color = getColor(tex_u / tex_w, tex_v / tex_w, tri.lightAmount);
           putPixel(x, y, color);
-          tx++;
+	  t += tstep;
         }
-        ty++;
       }
     }
 
@@ -423,30 +491,66 @@ export default class CanvasRenderer {
     dy1 = y2 - y1;
     dx1 = x2 - x1;
 
+    dv1 = v2 - v1;
+    du1 = u2 - u1;
+    dw1 = w2 - w1;
+
     if (dy1 !== 0) {
       dax_step = dx1 / dy1;
-    }
 
-    if (dy1 !== 0) {
-      let tx = 0;
-      let ty = 0;
+      du1_step = 0;
+      dv1_step = 0;
+
+      du1_step = du1 / abs(dy1);
+      dv1_step = dv1 / abs(dy1);
+      dw1_step = dw1 / abs(dy1);
 
       for (let y = y1; y < y2; y++) {
-        let ax = Math.round(x1 + dax_step * (y - y1));
-        let bx = Math.round(x0 + dbx_step * (y - y0));
+        let ax = Math.round(x1 + (y - y1) * dax_step);
+        let bx = Math.round(x0 + (y - y0) * dbx_step);
+
+        let tex_su = u1 + (y - y1) * du1_step;
+        let tex_sv = v1 + (y - y1) * dv1_step;
+        let tex_sw = w1 + (y - y1) * dw1_step;
+
+        let tex_eu = u0 + (y - y0) * du2_step;
+        let tex_ev = v0 + (y - y0) * dv2_step;
+        let tex_ew = w0 + (y - y0) * dw2_step;
 
         if (ax > bx) {
           let t = ax;
           ax = bx;
           bx = t;
+
+          t = tex_eu;
+          tex_eu = tex_su;
+          tex_su = t;
+
+          t = tex_ev;
+          tex_ev = tex_sv;
+          tex_sv = t;
+
+          t = tex_ew;
+          tex_ew = tex_sw;
+          tex_sw = t;
         }
 
+        tex_u = tex_su;
+        tex_v = tex_sv;
+        tex_w = tex_sw;
+
+        let tstep = 1.0 / (bx - ax);
+        let t = 0.0;
+
         for (let x = ax; x < bx; x++) {
-          let color = getColor(tx, ty, tri.lightAmount);
+          tex_u = (1.0 - t) * tex_su + t * tex_eu;
+          tex_v = (1.0 - t) * tex_sv + t * tex_ev;
+          tex_w = (1.0 - t) * tex_sw + t * tex_ew;
+
+          let color = getColor(tex_u / tex_w, tex_v / tex_w, tri.lightAmount);
           putPixel(x, y, color);
-          tx++;
+	  t += tstep;
         }
-        ty++;
       }
     }
   }
