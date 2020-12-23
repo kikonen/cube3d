@@ -164,7 +164,7 @@ export default class Plane {
         v2 = vertexes.length - 1;
 
         textures.push(tp2);
-        t2 = vertexes.length - 1;
+        t2 = textures.length - 1;
 
         if (this.debug) {
           material = new Material('clip_two_2', [140, 0, 0]);
