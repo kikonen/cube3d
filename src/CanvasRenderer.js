@@ -20,12 +20,11 @@ export default class CanvasRenderer {
     this.ctx2D = canvas.getContext("2d", { alpha: false });
   }
 
-  render({camera, objects, optimize, fill, wireframe, texture, debug}) {
-    this.optimize = optimize;
-    this.fill = fill;
-    this.wireframe = wireframe;
-    this.texture = texture;
-    this.optimize = optimize;
+  render({camera, objects, useOptimize, useFill, useWireframe, useTexture, debug}) {
+    this.useFill = useFill;
+    this.useWireframe = useWireframe;
+    this.useTexture = useTexture;
+    this.useOptimize = useOptimize;
     this.debug = debug;
 
     let screenW = this.canvas.width;
@@ -33,7 +32,7 @@ export default class CanvasRenderer {
 
     let ctx = this.ctx2D;
 
-    if (optimize) {
+    if (useOptimize) {
       // https://stackoverflow.com/questions/195262/can-i-turn-off-antialiasing-on-an-html-canvas-element
       // https://html.spec.whatwg.org/multipage/canvas.html#fill-and-stroke-styles:dom-context-2d-imagesmoothingenabled
       // CLAIM: can be faster; didn't notice any difference
@@ -97,7 +96,7 @@ export default class CanvasRenderer {
     };
   }
 
-  renderMesh(mesh, ctx, viewPort, viewTranslate, viewPos, lightDir, fill, wireframe) {
+  renderMesh(mesh, ctx, viewPort, viewTranslate, viewPos, lightDir) {
     let skippedTris = 0;
     let duplicateVertexes = 0;
 
@@ -243,12 +242,12 @@ export default class CanvasRenderer {
         let p1 = projectedVertexes[tri.v1];
         let p2 = projectedVertexes[tri.v2];
 
-        if (this.fill || this.wireframe) {
+        if (this.useFill || this.useWireframe) {
           ctx.beginPath();
 
           // https://stackoverflow.com/questions/8205828/html5-canvas-performance-and-optimization-tips-tricks-and-coding-best-practices
           // CLAIM: rounded numbers are *faster* in canvas
-          if (this.optimize) {
+          if (this.useOptimize) {
             ctx.moveTo(p0.x << 0, p0.y << 0);
             ctx.lineTo(p1.x << 0, p1.y << 0);
             ctx.lineTo(p2.x << 0, p2.y << 0);
@@ -259,21 +258,21 @@ export default class CanvasRenderer {
           }
         }
 
-        if (this.fill) {
-          let texture = this.texture ? tri.material.getTexture(tri.lightAmount) : null;
+        if (this.useFill) {
+          let texture = this.useTexture ? tri.material.texture : null;
           if (texture) {
             let tp0 = textureVertexes[tri.t0];
             let tp1 = textureVertexes[tri.t1];
             let tp2 = textureVertexes[tri.t2];
 
-            this.renderTexture(ctx, p0, p1, p2, tp0, tp1, tp2, texture, tri);
+            this.renderTexture(ctx, viewPort, p0, p1, p2, tp0, tp1, tp2, texture, tri);
           } else {
             ctx.fillStyle = tri.material.getColor(tri.lightAmount);
             ctx.fill();
           }
         }
 
-        if (this.wireframe) {
+        if (this.useWireframe) {
           ctx.closePath();
           ctx.stroke();
         }
@@ -293,230 +292,162 @@ export default class CanvasRenderer {
    *
    * https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
    */
-  renderTexture(ctx, p0, p1, p2, tp0, tp1, tp2, texture, tri) {
+  renderTexture(ctx, viewPort, p0, p1, p2, tp0, tp1, tp2, texture, tri) {
+    let pixelData;// = new ImageData(new Uint8ClampedArray(4), 1, 1);
+
     function putPixel(x, y, color) {
       if (x < 0 || x > 800 || y < 0 || y > 800) {
         throw `KO: ${x}, ${y}`;
       }
-      ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
+      if (false) {
+        let data = pixelData.data;
+        data[0] = color[0];
+        data[1] = color[1];
+        data[2] = color[2];
+        data[3] = color[3];
+
+        ctx.putImageData(pixelData, x, y);
+      } else {
+        ctx.fillStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+        ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
+        //viewPort.putPixel(x, y, color);
+      }
     }
 
-    let axis = [p0, p1, p2].sort((a, b) => { return a.y - b.y; });
+    function getColorRGBA(tx, ty, lightAmount) {
+      let rgba = texture.getRGBA(tx, ty);
+      let color = [
+        255 & (rgba >> 24),
+        255 & (rgba >> 16),
+        255 & (rgba >> 8),
+        255 & (rgba)];
+      return color.map(c => {
+        return Math.max(Math.floor(c + (c / 2) * lightAmount), 0);
+      });
+    }
+
+    function getColor(tx, ty, lightAmount) {
+      let color = texture.getColor(tx, ty);
+      return color.map(c => {
+        return Math.max(Math.floor(c + (c / 2) * lightAmount), 0);
+      });
+    }
 
     let w = texture.width;
     let h = texture.height;
+
+    let axis = [[p0, tp0], [p1, tp1], [p2, tp2]];
+    axis.sort((a, b) => {
+      let d = a[0].y - b[0].y;
+      if (d == 0) {
+        d = b[0].x - a[0].x;
+      }
+      return d;
+    });
 
     let min = axis[0];
     let mid = axis[1];
     let max = axis[2];
 
-    let y0 = Math.round(min.y);
-    let y1 = Math.round(mid.y);
-    let y2 = Math.round(max.y);
+    let y0 = Math.round(min[0].y);
+    let y1 = Math.round(mid[0].y);
+    let y2 = Math.round(max[0].y);
 
+    let x0 = Math.round(min[0].x);
+    let x1 = Math.round(mid[0].x);
+    let x2 = Math.round(max[0].x);
 
-    function plotLineLow(x0, y0, x1, y1, plot, side) {
-      let dx = x1 - x0;
-      let dy = y1 - y0;
-      let yi = 1;
-      if (dy < 0) {
-        yi = -1;
-        dy = -dy;
-      }
-      let D = (2 * dy) - dx;
-      let y = y0;
-
-      for (let x = x0; x < x1; x++) {
-        plot(x, y);
-
-        if (x === x0 || x == x1 - 1) {
-          side.push(Math.round(x));
-        }
-
-        if (D > 0) {
-          y = y + yi;
-          D = D + (2 * (dy - dx));
-          side.push(Math.round(x));
-        } else {
-          D = D + 2 * dy;
-        }
-      }
+    if (this.debug) {
+      ctx.closePath();
+      ctx.stroke();
     }
-
-    function plotLineHigh(x0, y0, x1, y1, plot, side) {
-      let dx = x1 - x0;
-      let dy = y1 - y0;
-      let xi = 1;
-      if (dx < 0) {
-        xi = -1;
-        dx = -dx;
-      }
-      let D = (2 * dx) - dy;
-      let x = x0;
-
-      for (let y = y0; y < y1; y++) {
-        plot(x, y);
-        side.push(Math.round(x));
-
-        if (D > 0) {
-          x = x + xi;
-          D = D + (2 * (dx - dy));
-        } else {
-          D = D + 2 * dx;
-        }
-      }
-    }
-
-    function plotLine(x0, y0, x1, y1, plot, side) {
-      if (Math.abs(y1 - y0) < Math.abs(x1 - x0)) {
-        if (x0 > x1) {
-          plotLineLow(x1, y1, x0, y0, plot, side);
-        } else {
-          plotLineLow(x0, y0, x1, y1, plot, side);
-        }
-      } else {
-        if (y0 > y1) {
-          plotLineHigh(x1, y1, x0, y0, plot, side);
-        } else {
-          plotLineHigh(x0, y0, x1, y1, plot, side);
-        }
-      }
-    }
-
-    ctx.closePath();
-    ctx.stroke();
 
     ctx.fillStyle = tri.material.getColor(tri.lightAmount);
+
+    if (this.debug) {
+      console.log(min[0], mid[0], max[0]);
+    }
 
     if (this.debug) {
       ctx.fillStyle = '#FF0000';
     }
-    let side1 = [];
-    plotLine(min.x, min.y, mid.x, mid.y, putPixel, side1);
 
     if (this.debug) {
-      ctx.fillStyle = '#0000FF';
-    }
-    let side2 = [];
-    plotLine(min.x, min.y, max.x, max.y, putPixel, side2);
-
-    if (this.debug) {
-      ctx.fillStyle = '#00FF00';
-    }
-    let side3 = [];
-    plotLine(mid.x, mid.y, max.x, max.y, putPixel, side3);
-
-    if (this.debug) {
-      console.log(p0, p1, p2);
-      console.log(side1);
-      console.log(side2);
-      console.log(side3);
-    }
-  }
-
-  /**
-   * Extremely slow texture render; just pure exercise
-   *
-   * https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-   */
-  renderTexture_NOPE(ctx, p0, p1, p2, tp0, tp1, tp2, texture, tri) {
-    function putPixel(x, y, color) {
-      if (x < 0 || x > 800 || y < 0 || y > 800) {
-        throw `KO: ${x}, ${y}`;
-      }
-      ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
+      console.log(min, mid, max);
+      console.log(`y_diff = ${y2 - y0} `);
+      console.log(`x_diff = ${Math.max(x0, x1, x2) - Math.min(x0, x1, x2)} `);
     }
 
-    let axis = [p0, p1, p2].sort((a, b) => { return a.y - b.y; });
+    let dy1 = y1 - y0;
+    let dx1 = x1 - x0;
 
-    let w = texture.width;
-    let h = texture.height;
+    let dy2 = y2 - y0;
+    let dx2 = x2 - x0;
 
-    let min = axis[0];
-    let mid = axis[1];
-    let max = axis[2];
+    let dax_step = 0;
+    let dbx_step = 0;
 
-    let y0 = Math.round(min.y);
-    let y1 = Math.round(mid.y);
-    let y2 = Math.round(max.y);
-
-    let dxa = 0;
-    let dxb = 0;
-
-    if (y1 !== y0) {
-      dxa = (mid.x - min.x) / (mid.y - min.y);
+    // PART: top
+    if (dy1 !== 0) {
+      dax_step = dx1 / dy1;
     }
-    if (y2 !== y1) {
-      dxb = (max.x - min.x) / (max.y - min.y);
+    if (dy2 !== 0) {
+      dbx_step = dx2 / dy2;
     }
 
-//    ctx.fillStyle = "#FF0000";
-//    ctx.fill();
+    if (dy1 !== 0) {
+      let tx = 0;
+      let ty = 0;
 
-    ctx.closePath();
-    ctx.stroke();
+      for (let y = y0; y < y1; y++) {
+        let yd = y - y0;
+        let ax = Math.round(x0 + dax_step * (y - y0));
+        let bx = Math.round(x0 + dbx_step * (y - y0));
 
-    ctx.fillStyle = tri.material.getColor(tri.lightAmount);
+        if (ax > bx) {
+          let t = ax;
+          ax = bx;
+          bx = t;
+        }
 
-    if (mid.x >= min.x) {
-      let t = dxa;
-      dxa = dxb;
-      dxb = t;
-    }
-
-    if (this.debug) {
-      ctx.fillStyle = "#00FF00";
-    }
-
-    for (let y = y0; y < y1; y++) {
-      let dy = y - y0;
-      let startX = min.x + dxa * dy;
-      let endX = min.x + dxb * dy;
-
-      if (startX < 0 || endX < 0) {
-        continue;
-      }
-
-      for (let x = startX; x < endX; x++) {
-        putPixel(x, y);
+        for (let x = ax; x < bx; x++) {
+          let color = getColor(tx, ty, tri.lightAmount);
+          putPixel(x, y, color);
+          tx++;
+        }
+        ty++;
       }
     }
 
-    let startBaseX;
-    let endBaseX;
-    let startBaseY;
-    let endBaseY;
+    // PART: bottom
+    dy1 = y2 - y1;
+    dx1 = x2 - x1;
 
-    if (mid.x > max.x) {
-      dxb = (max.x - mid.x) / (max.y - mid.y);
-      startBaseX  = min.x;
-      endBaseX = mid.x;
-      startBaseY = y0;
-      endBaseY = y1;
-    } else {
-      dxa = (max.x - mid.x) / (max.y - mid.y);
-      startBaseX  = mid.x;
-      endBaseX = min.x;
-      startBaseY = y1;
-      endBaseY = y0;
+    if (dy1 !== 0) {
+      dax_step = dx1 / dy1;
     }
 
-    if (this.debug) {
-      ctx.fillStyle = "#0000FF";
-    }
+    if (dy1 !== 0) {
+      let tx = 0;
+      let ty = 0;
 
-    for (let y = y1; y < y2; y++) {
-      let startX = startBaseX + dxa * (y - startBaseY);
-      let endX = endBaseX + dxb * (y - endBaseY);
+      for (let y = y1; y < y2; y++) {
+        let ax = Math.round(x1 + dax_step * (y - y1));
+        let bx = Math.round(x0 + dbx_step * (y - y0));
 
-      if (startX < 0 || endX < 0) {
-        continue;
-      }
+        if (ax > bx) {
+          let t = ax;
+          ax = bx;
+          bx = t;
+        }
 
-      for (let x = startX; x < endX; x++) {
-        putPixel(x, y);
+        for (let x = ax; x < bx; x++) {
+          let color = getColor(tx, ty, tri.lightAmount);
+          putPixel(x, y, color);
+          tx++;
+        }
+        ty++;
       }
     }
   }
-
 }

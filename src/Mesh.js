@@ -2,6 +2,7 @@ import Vec3D from './Vec3D.js';
 import Matrix4x4 from './Matrix4x4.js';
 import Triangle from './Triangle.js';
 import Material from './Material.js';
+import Texture from './Texture.js';
 
 const COLOR = [150, 150, 0];
 const MATERIAL = new Material('mesh', COLOR);
@@ -191,7 +192,7 @@ export default class Mesh {
               return img;
             });
           }).then(img => {
-            m.textureData = img;
+            m.texture = new Texture(img);
             return m;
           });
           texturePromises.push(promise);

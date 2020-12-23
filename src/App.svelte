@@ -112,12 +112,12 @@
 
     fps = 0;
     engine = new Engine({input: input, canvas: canvasEl});
-    engine.rotate = rotate;
     engine.debug = debug;
-    engine.fill = fill;
-    engine.wireframe = wireframe;
-    engine.texture = texture;
-    engine.optimize = optimize;
+    engine.useRotate = rotate;
+    engine.useFill = fill;
+    engine.useWireframe = wireframe;
+    engine.useTexture = texture;
+    engine.useOptimize = optimize;
 
     if (model.camera) {
       engine.camera = model.camera;
@@ -176,7 +176,7 @@
   function toggleFill() {
     fill = !fill;
     if (engine) {
-      engine.fill = fill;
+      engine.useFill = fill;
       engine.resetFrames();
     }
   }
@@ -184,7 +184,7 @@
   function toggleWireframe() {
     wireframe = !wireframe;
     if (engine) {
-      engine.wireframe = wireframe;
+      engine.useWireframe = wireframe;
       engine.resetFrames();
     }
   }
@@ -192,7 +192,7 @@
   function toggleTexture() {
     texture = !texture;
     if (engine) {
-      engine.texture = texture;
+      engine.useTexture = texture;
       engine.resetFrames();
     }
   }
@@ -211,7 +211,7 @@
   function toggleRotate() {
     rotate = !rotate;
     if (engine) {
-      engine.rotate = rotate;
+      engine.useRotate = rotate;
       engine.resetFrames();
     }
   }
@@ -219,7 +219,7 @@
   function toggleOptimize() {
     optimize = !optimize;
     if (engine) {
-      engine.optimize = optimize;
+      engine.useOptimize = optimize;
       engine.resetFrames();
     }
   }

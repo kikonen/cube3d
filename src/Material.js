@@ -18,7 +18,7 @@ export default class Material {
 
   getColor(lightAmount) {
     let color = null;
-    if (this.textureData) {
+    if (this.texture) {
       color = this.color || COLOR;
     } else {
       let kd = this.kd;
@@ -39,9 +39,5 @@ export default class Material {
       ${shaded[0]},
       ${shaded[1]},
       ${shaded[2]})`;
-  }
-
-  getTexture(lightAmount) {
-    return this.textureData;
   }
 }

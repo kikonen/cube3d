@@ -23,12 +23,12 @@ export default class Engine {
 
     this.objects = [];
 
-    this.fill = true;
-    this.wireframe = false;
-    this.texture = true;
+    this.useFill = true;
+    this.useWireframe = false;
+    this.useTexture = true;
 
-    this.optimize = true;
-    this.rotate = false;
+    this.useOptimize = true;
+    this.useRotate = false;
     this.debug = false;
     this.ticks = 0;
 
@@ -85,7 +85,7 @@ export default class Engine {
     let elapsed = now - this.currentTime;
     let timeScale = elapsed / WORLD_SPEED;
 
-    if (this.rotate) {
+    if (this.useRotate) {
       let mesh = this.objects[0];
       mesh.updateRotate(0, timeScale * 4, timeScale * 8);
     }
@@ -112,10 +112,10 @@ export default class Engine {
     let res = this.renderer.render({
       camera: this.camera,
       objects: this.objects,
-      fill: this.fill,
-      wireframe: this.wireframe,
-      texture: this.texture,
-      optimize: this.optimize,
+      useFill: this.useFill,
+      useWireframe: this.useWireframe,
+      useTexture: this.useTexture,
+      useOptimize: this.useOptimize,
       debug: this.debug});
 
     this.frames += 1;
