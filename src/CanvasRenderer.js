@@ -263,9 +263,12 @@ export default class CanvasRenderer {
         if (this.useFill) {
           let texture = this.useTexture ? tri.material.texture : null;
           if (texture) {
-            let tp0 = textureVertexes[tri.t0];
-            let tp1 = textureVertexes[tri.t1];
-            let tp2 = textureVertexes[tri.t2];
+            let tp0 = textureVertexes[tri.t0].divide(p0.w, true);
+            let tp1 = textureVertexes[tri.t1].divide(p1.w, true);
+            let tp2 = textureVertexes[tri.t2].divide(p2.w, true);
+            tp0.w = 1.0 / p0.w;
+            tp1.w = 1.0 / p1.w;
+            tp2.w = 1.0 / p2.w;
 
             this.renderTexture(ctx, viewPort, p0, p1, p2, tp0, tp1, tp2, texture, tri);
           } else {
@@ -482,7 +485,7 @@ export default class CanvasRenderer {
 
           let color = getColor(tex_u / tex_w, tex_v / tex_w, tri.lightAmount);
           putPixel(x, y, color);
-	  t += tstep;
+          t += tstep;
         }
       }
     }
@@ -549,7 +552,7 @@ export default class CanvasRenderer {
 
           let color = getColor(tex_u / tex_w, tex_v / tex_w, tri.lightAmount);
           putPixel(x, y, color);
-	  t += tstep;
+          t += tstep;
         }
       }
     }
